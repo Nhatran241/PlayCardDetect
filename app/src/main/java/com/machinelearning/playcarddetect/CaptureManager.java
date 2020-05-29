@@ -119,8 +119,13 @@ public class CaptureManager {
             final Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
             final Point size = new Point();
             display.getRealSize(size);
-            width = size.x;
-            height = size.y;
+            if(width<height) {
+                width = size.x;
+                height = size.y;
+            }else {
+                width = size.y;
+                height = size.x;
+            }
 
         imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
         Log.d("nhatnhat", "1");
