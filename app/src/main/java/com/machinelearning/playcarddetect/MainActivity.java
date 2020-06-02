@@ -12,6 +12,7 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
@@ -20,6 +21,7 @@ import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -50,8 +52,14 @@ import com.google.firebase.ml.vision.objects.FirebaseVisionObjectDetectorOptions
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 import com.google.firebase.ml.vision.text.RecognizedLanguage;
+import com.machinelearning.playcarddetect.data.Card;
 import com.machinelearning.playcarddetect.reciver.TakeBitmapOnTime;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -79,14 +87,19 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
     private WindowManager.LayoutParams params;
     private WindowManager.LayoutParams params_rect;
 
+    /**
+     * Player data
+     */
+    private List<Card> playercards;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initPlayerData();
         initExtractText();
-        initLabelObject();
         initCustomLabel();
-        initTrackObject();
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         overlayIcon = LayoutInflater.from(this).inflate(R.layout.bubble_layout, null);
         rect= (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.rect, null);
@@ -136,6 +149,10 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 //        initTimer();
     }
 
+    private void initPlayerData() {
+        playercards = new ArrayList<>();
+    }
+
     private void initCustomLabel() {
 
          remoteModel =
@@ -152,37 +169,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                 });
     }
 
-    private void initTrackObject() {
-
-        FirebaseVisionObjectDetectorOptions options =
-                new FirebaseVisionObjectDetectorOptions.Builder()
-                        .setDetectorMode(FirebaseVisionObjectDetectorOptions.SINGLE_IMAGE_MODE)
-                        .enableMultipleObjects()
-                        .enableClassification()  // Optional
-                        .build();
-         objectDetector =
-                FirebaseVision.getInstance().getOnDeviceObjectDetector(options);
-    }
-
-    private void initLabelObject() {
-        labeler = FirebaseVision.getInstance()
-                .getOnDeviceImageLabeler();
-    }
-
     private void initTimer() {
-//        if (android.os.Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this)) {   //Android M Or Over
-//            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-//            startActivityForResult(intent, 2000);
-//        }else {
-//            mWindowManager.addView(overlayIcon,params);
-//            mWindowManager.addView(rect,params_rect);
-//            overlayIcon.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    captureManager.takeScreenshot();
-//                }
-//            });
-//        }
 
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -234,7 +221,6 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
             });
         }
     }
-
     private void getTextFromImage(final FirebaseVisionImage image) {
         Task<FirebaseVisionText> result =
                 detector.processImage(image)
@@ -244,60 +230,112 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                                 /**
                                  * Extract text from result
                                  */
-                                Log.d(TAG, "onSuccess: extrat");
-                                String resultText = firebaseVisionText.getText();
-                                for (FirebaseVisionText.TextBlock block: firebaseVisionText.getTextBlocks()) {
-                                    String blockText = block.getText();
-                                    Float blockConfidence = block.getConfidence();
-                                    List<RecognizedLanguage> blockLanguages = block.getRecognizedLanguages();
-                                    Point[] blockCornerPoints = block.getCornerPoints();
-                                    Rect blockFrame = block.getBoundingBox();
-
-                                    for (FirebaseVisionText.Line line: block.getLines()) {
-                                        String lineText = line.getText();
-                                        Float lineConfidence = line.getConfidence();
-                                        List<RecognizedLanguage> lineLanguages = line.getRecognizedLanguages();
-                                        Point[] lineCornerPoints = line.getCornerPoints();
-                                        Rect lineFrame = line.getBoundingBox();
-
-
-                                        Log.d("text", "onSuccess: "+lineText);
-                                        Bitmap bitmap = image.getBitmap();
-                                        for (FirebaseVisionText.Element element: line.getElements()) {
-                                            String elementText = element.getText();
-                                            Float elementConfidence = element.getConfidence();
-                                            List<RecognizedLanguage> elementLanguages = element.getRecognizedLanguages();
-                                            Point[] elementCornerPoints = element.getCornerPoints();
-                                            if(elementText.equals("A")||elementText.equals("2")||elementText.equals("3")||elementText.equals("4")
-                                                    ||elementText.equals("5")||elementText.equals("6")||elementText.equals("7")||elementText.equals("8")
-                                                    ||elementText.equals("9")||elementText.equals("10")||elementText.equals("J")||elementText.equals("K")
-                                                    ||elementText.equals("Q")) {
-                                                Rect elementFrame = element.getBoundingBox();
-//                                                if(bitmap.getHeight()>bitmap.getWidth()) {
-                                                    if (element.getBoundingBox().top < bitmap.getWidth()/2){
-                                                        Bitmap card = Bitmap.createBitmap(bitmap,elementFrame.left,elementFrame.bottom, 50, 50);
-                                                        ImageView imageView = findViewById(R.id.iv_main);
-                                                        imageView.setImageBitmap(bitmap);
-                                                        getLabelFromCustom(createFirebaseVisionImage(card),elementText);
-                                                    }
-//                                                }
-//                                                rect.setVisibility(View.VISIBLE);
-//                                                ImageView view = new ImageView(MainActivity.this);
-//                                                RelativeLayout.LayoutParams params;
-//                                                params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-//                                                params.leftMargin = elementFrame.left;
-//                                                params.topMargin = elementFrame.top;
-////                                            Bitmap card;
-//                                                Log.d("customlabel", "-----------------");
-//
-//                                                Log.d("customlabel", "onSuccess: "+bitmap.getWidth()+"/"+bitmap.getHeight());
-//                                                Log.d("customlabel", "onSuccess: "+elementFrame.left+":"+elementFrame.bottom);
-
-//                                                rect.addView(view, params);
-                                            }
-                                        }
-                                    }
+                                List<FirebaseVisionText.TextBlock> blocks =firebaseVisionText.getTextBlocks();
+                                for (int i = 0; i <blocks.size() ; i++) {
+                                    Log.d("nhatnhat", "location :: "+blocks.get(i).getText()+" left :"+blocks.get(i).getBoundingBox().left+ " right :"+blocks.get(i).getBoundingBox().right +" top :"+blocks.get(i).getBoundingBox().top + " bot: "+blocks.get(i).getBoundingBox().bottom);
                                 }
+//                                if(blocks.size()>3) {
+//                                    for (int i = 0; i <blocks.size() ; i++) {
+//                                        Log.d("nhatnhat", "block :: "+blocks.get(i).getText());
+//                                    }
+//                                    String playercard = blocks.get(blocks.size()-3).getText();
+//                                    for (int i = 0; i <playercard.length() ; i++) {
+//                                        if(playercard.charAt(i)!=' '){
+//                                            boolean hasone =false;
+//                                            for (Card card:playercards) {
+//                                                if(card.getCardLevel().equals(playercard.charAt(i)+"")){
+//                                                    hasone=true;
+//                                                }
+//                                            }
+//                                            if(!hasone&&playercards.size()<13)
+//                                                playercards.add(new Card(playercard.charAt(i)+"",""));
+//                                        }
+//                                    }
+//                                    Log.d(TAG, "playercard:---------------------------------------- ");
+//                                    for (int i = 0; i <playercards.size() ; i++) {
+//                                        Log.d(TAG, "playercard: "+playercards.get(i).getCardLevel());
+//                                    }
+////
+//                                }else {
+//                                    Toast.makeText(MainActivity.this, "No View To Detect", Toast.LENGTH_SHORT).show();
+//                                }
+//                                String resultText = firebaseVisionText.getText();
+//                                for (FirebaseVisionText.TextBlock block: firebaseVisionText.getTextBlocks()) {
+//                                    String blockText = block.getText();
+//                                    Float blockConfidence = block.getConfidence();
+//                                    List<RecognizedLanguage> blockLanguages = block.getRecognizedLanguages();
+//                                    Point[] blockCornerPoints = block.getCornerPoints();
+//                                    Rect blockFrame = block.getBoundingBox();
+//
+////                                    for (FirebaseVisionText.Line line: block.getLines()) {
+////                                        String lineText = line.getText();
+////                                        Float lineConfidence = line.getConfidence();
+////                                        List<RecognizedLanguage> lineLanguages = line.getRecognizedLanguages();
+////                                        Point[] lineCornerPoints = line.getCornerPoints();
+////                                        Rect lineFrame = line.getBoundingBox();
+////                                        Log.d("nhatnhat", "line text: "+lineText+" location :"+lineFrame.top);
+////
+////
+////                                        Bitmap bitmap = image.getBitmap();
+////                                        if(bitmap.getHeight()>bitmap.getWidth()){
+////                                            bitmap = RotateBitmap(bitmap,90);
+////                                        }
+////                                        Log.d("nhatnhat", "new calculation"+bitmap.getHeight()+"/"+bitmap.getWidth());
+////                                        for (FirebaseVisionText.Element element: line.getElements()) {
+////                                            String elementText = element.getText();
+////                                            Float elementConfidence = element.getConfidence();
+////                                            List<RecognizedLanguage> elementLanguages = element.getRecognizedLanguages();
+////                                            Point[] elementCornerPoints = element.getCornerPoints();
+////                                            if(elementText.equals("A")||elementText.equals("2")||elementText.equals("3")||elementText.equals("4")
+////                                                    ||elementText.equals("5")||elementText.equals("6")||elementText.equals("7")||elementText.equals("8")
+////                                                    ||elementText.equals("9")||elementText.equals("10")||elementText.equals("J")||elementText.equals("K")
+////                                                    ||elementText.equals("Q")) {
+////                                                Rect elementFrame = element.getBoundingBox();
+////                                                if(bitmap.getHeight()>bitmap.getWidth()) {
+////
+////                                                }else {
+////                                                    if(element.getBoundingBox().top<bitmap.getHeight()/2){
+////                                                        /**
+////                                                         * Player cards
+////                                                         */
+//////                                                        Bitmap card = Bitmap.createBitmap(bitmap,elementFrame.left,elementFrame.bottom, 50, 50);
+//////                                                        ImageView imageView = findViewById(R.id.iv_main);
+//////                                                        imageView.setImageBitmap(bitmap);
+//////                                                        getLabelFromCustom(createFirebaseVisionImage(card),elementText);
+////                                                        Log.d("nhatnhat", "player card"+elementText+" :"+"y="+element.getBoundingBox().top);
+////
+////                                                    }else if(element.getBoundingBox().top<bitmap.getHeight()*3/4&&element.getBoundingBox().top>bitmap.getHeight()/4){
+////                                                        /**
+////                                                         * Table cards
+////                                                         */
+////                                                        Log.d("nhatnhat", "table card"+elementText);
+////
+//////                                                        Bitmap card = Bitmap.createBitmap(bitmap,elementFrame.left,elementFrame.bottom, 50, 50);
+//////                                                        ImageView imageView = findViewById(R.id.iv_main);
+//////                                                        imageView.setImageBitmap(bitmap);
+//////                                                        getLabelFromCustom(createFirebaseVisionImage(card),elementText);
+////                                                    }
+////                                                }
+////
+//////                                                    }
+//////                                                }
+//////                                                rect.setVisibility(View.VISIBLE);
+//////                                                ImageView view = new ImageView(MainActivity.this);
+//////                                                RelativeLayout.LayoutParams params;
+//////                                                params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+//////                                                params.leftMargin = elementFrame.left;
+//////                                                params.topMargin = elementFrame.top;
+////////                                            Bitmap card;
+//////                                                Log.d("customlabel", "-----------------");
+//////
+//////                                                Log.d("customlabel", "onSuccess: "+bitmap.getWidth()+"/"+bitmap.getHeight());
+//////                                                Log.d("customlabel", "onSuccess: "+elementFrame.left+":"+elementFrame.bottom);
+////
+//////                                                rect.addView(view, params);
+////                                            }
+////                                        }
+////                                    }
+//                                }
 
                             }
                         })
@@ -305,10 +343,15 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                                 new OnFailureListener() {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
-                                        // Task failed with an exception
-                                        // ...
+                                        Log.d("nhatnhat", "onFailure: "+e.toString());
                                     }
                                 });
+    }
+    public static Bitmap RotateBitmap(Bitmap source, float angle)
+    {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
     public Bitmap[][] splitBitmap(Bitmap bitmap, int xCount, int yCount) {
         // Allocate a two dimensional array to hold the individual images.
@@ -345,14 +388,14 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                         public void onSuccess(List<FirebaseVisionImageLabel> labels) {
                             for (FirebaseVisionImageLabel a:
                                     labels) {
-                                Log.d("customlabel", "onSuccess: "+a.getText()+""+text);
+                                Log.d("nhatnhat", "suit of: "+text+" is:"+a.getText());
                             }
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Log.d("customlabel", "fail: "+e.toString());
+                            Log.d("nhatnhat", "checking suit for "+text+" failed" +e.toString());
                         }
                     });
         } catch (FirebaseMLException e) {
@@ -382,42 +425,53 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                 });
     }
 
-    private void trackObjectFromImage(FirebaseVisionImage image){
-        objectDetector.processImage(image)
-                .addOnSuccessListener(
-                        new OnSuccessListener<List<FirebaseVisionObject>>() {
-                            @Override
-                            public void onSuccess(List<FirebaseVisionObject> detectedObjects) {
-                                Log.d("nhatnhattrack", "----------------------");
-                                for (int i = 0; i <detectedObjects.size() ; i++) {
-                                    Log.d("nhatnhattrack", detectedObjects.get(i).getClassificationConfidence()+"onSuccess: "+detectedObjects.get(i).getBoundingBox().centerX()+":"+detectedObjects.get(i).getBoundingBox().centerY());
-
-                                }
-                            }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                // Task failed with an exception
-                                // ...
-                            }
-                        });
-    }
     private FirebaseVisionImage createFirebaseVisionImage(Bitmap bitmap) {
         return FirebaseVisionImage.fromBitmap(bitmap);
     }
 
+    public File savebitmap(Bitmap bmp) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG, 60, bytes);
+        File f = new File(Environment.getExternalStorageDirectory()
+                + File.separator + "testimage.jpg");
+        f.createNewFile();
+        FileOutputStream fo = new FileOutputStream(f);
+        fo.write(bytes.toByteArray());
+        fo.close();
+        return f;
+    }
     @Override
     public void onBitmapReady(Bitmap bitmap) {
-        Log.d(TAG, "onBitmapReady: ");
-        FirebaseVisionImage image = createFirebaseVisionImage(bitmap);
-        getTextFromImage(image);
+//        try {
+//            if(bitmap.getWidth()<bitmap.getHeight()){
+//                Bitmap card = Bitmap.createBitmap(RotateBitmap(bitmap,90),396,536, 1037-396, 607-536);
+//                Log.d("nhatnhat", "onBitmapReady: "+card.getWidth()+"/"+card.getHeight());
+//
+//                FirebaseVisionImage image = createFirebaseVisionImage(bitmap);
+//                getTextFromImage(image);
+//                ImageView imageView = findViewById(R.id.iv_main);
+//                imageView.setImageBitmap(bitmap);
+//            }else {
+
+        try {
+
+             String fileName = "yyyyMMdd_hhmmss";
+             String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
+             String fileType = "PNG";
+              Bitmap card = Bitmap.createBitmap(bitmap,398,536, 766, 65);
+        Log.d("nhatnhat", "onBitmapReady: "+card.getWidth()+"/"+card.getHeight());
+            File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this, card, "111111", filePath, fileType);
+//
+                FirebaseVisionImage image = createFirebaseVisionImage(card);
+                getTextFromImage(image);
+                ImageView imageView = findViewById(R.id.iv_main);
+                imageView.setImageBitmap(bitmap);
+            }
+
+        catch (Exception e){}
 //        getLabelFromImage(image);
 //        getLabelFromCustom(image);
 //        trackObjectFromImage(image);
-        ImageView imageView = findViewById(R.id.iv_main);
-        imageView.setImageBitmap(bitmap);
     }
 
 }

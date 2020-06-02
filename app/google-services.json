@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "776616001354",
+    "firebase_url": "https://playcarddetects.firebaseio.com",
+    "project_id": "playcarddetects",
+    "storage_bucket": "playcarddetects.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:776616001354:android:a9fbe517d0a8879b61cbb3",
+        "android_client_info": {
+          "package_name": "com.machinelearning.playcarddetect"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "776616001354-sds70tamnes0a4ic41aclhnvtqa0trs8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLzZjGAUgvm58Yxa120Py94d8tGjWPhfk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "776616001354-sds70tamnes0a4ic41aclhnvtqa0trs8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
