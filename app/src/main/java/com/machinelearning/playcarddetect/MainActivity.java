@@ -53,6 +53,7 @@ import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 import com.google.firebase.ml.vision.text.RecognizedLanguage;
 import com.machinelearning.playcarddetect.data.Card;
+import com.machinelearning.playcarddetect.data.CardsManager;
 import com.machinelearning.playcarddetect.reciver.TakeBitmapOnTime;
 
 import java.io.ByteArrayOutputStream;
@@ -102,11 +103,10 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
         initCustomLabel();
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         overlayIcon = LayoutInflater.from(this).inflate(R.layout.bubble_layout, null);
-        rect= (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.rect, null);
-        rect.setOnClickListener(new View.OnClickListener() {
+        overlayIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                rect.setVisibility(View.GONE);
+                captureManager.takeScreenshot();
             }
         });
 
@@ -144,9 +144,14 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                         PixelFormat.TRANSLUCENT);
             }
 
-//            params_rect.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
         }
-//        initTimer();
+        mWindowManager.addView(overlayIcon,params);
+        overlayIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                captureManager.takeScreenshot();
+            }
+        });
     }
 
     private void initPlayerData() {
@@ -198,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
             public void onResult(boolean isGranted) {
                 if(isGranted){
                     captureManager.init(MainActivity.this);
-                    initTimer();
+//                    initTimer();
                 }else {
                     captureManager.requestScreenshotPermission(MainActivity.this,REQUESTCAPTURE);
                 }
@@ -210,9 +215,8 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         captureManager.onActivityResult(resultCode,data);
-        if(requestCode==2000&&resultCode==RESULT_OK){
+        if(requestCode==101&&resultCode==RESULT_OK){
             mWindowManager.addView(overlayIcon,params);
-            Toast.makeText(this, "asdasd", Toast.LENGTH_SHORT).show();
             overlayIcon.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -221,19 +225,53 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
             });
         }
     }
-    private void getTextFromImage(final FirebaseVisionImage image) {
+    private void getTextFromImage(final FirebaseVisionImage card, final List<Bitmap> suit) {
         Task<FirebaseVisionText> result =
-                detector.processImage(image)
+                detector.processImage(card)
                         .addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
                             @Override
                             public void onSuccess(FirebaseVisionText firebaseVisionText) {
                                 /**
                                  * Extract text from result
                                  */
-                                List<FirebaseVisionText.TextBlock> blocks =firebaseVisionText.getTextBlocks();
-                                for (int i = 0; i <blocks.size() ; i++) {
-                                    Log.d("nhatnhat", "location :: "+blocks.get(i).getText()+" left :"+blocks.get(i).getBoundingBox().left+ " right :"+blocks.get(i).getBoundingBox().right +" top :"+blocks.get(i).getBoundingBox().top + " bot: "+blocks.get(i).getBoundingBox().bottom);
+                                for (FirebaseVisionText.TextBlock block: firebaseVisionText.getTextBlocks()) {
+                                    for (FirebaseVisionText.Line line: block.getLines()) {
+                                        for (final FirebaseVisionText.Element element: line.getElements()) {
+                                            Log.d("nhatnhat", "------------------------");
+                                            if(element.getText().length()>1){
+//                                                int width =(element.getBoundingBox().right-element.getBoundingBox().left)/element.getText().length();
+//                                                Log.d("nhatnhat", "onSuccess: "+element.getText());
+//                                                for (int i = 0; i <element.getText().length() ; i++) {
+//                                                    String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
+//                                                    Bitmap bitmap1 = Bitmap.createBitmap(card.getBitmap(),element.getBoundingBox().left+(width*i),element.getBoundingBox().bottom-10,50,50);
+//                                                    String fileType = "PNG";
+//                                                    try {
+//                                                        File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(MainActivity.this, bitmap1, element.getText().charAt(i)+"", filePath, fileType);
+//                                                    } catch (Exception e) {
+//                                                        e.printStackTrace();
+//                                                    }
+//                                                    getLabelFromCustom(createFirebaseVisionImage(bitmap1),element.getText().charAt(i)+"");
+//
+//                                                }
+                                            }else {
+                                                Log.d("nhatnhat", "onSuccess: "+element.getText());
+                                                String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
+                                                final Bitmap bitmap1 = Bitmap.createBitmap(card.getBitmap(), (int) (element.getBoundingBox().exactCenterX()-16),60,32,32);
+                                                String fileType = "PNG";
+                                                try {
+                                                    File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(MainActivity.this, bitmap1, element.getText(), filePath, fileType);
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                }
+
+                                                getLabelFromCustom(createFirebaseVisionImage(bitmap1),element.getText());
+
+                                            }
+
+                                        }
+                                    }
                                 }
+
 //                                if(blocks.size()>3) {
 //                                    for (int i = 0; i <blocks.size() ; i++) {
 //                                        Log.d("nhatnhat", "block :: "+blocks.get(i).getText());
@@ -375,7 +413,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
         FirebaseVisionOnDeviceAutoMLImageLabelerOptions.Builder optionsBuilder;
             optionsBuilder = new FirebaseVisionOnDeviceAutoMLImageLabelerOptions.Builder(remoteModel);
         FirebaseVisionOnDeviceAutoMLImageLabelerOptions options = optionsBuilder
-                .setConfidenceThreshold(0.5f)  // Evaluate your model in the Firebase console
+                .setConfidenceThreshold(0.6f)  // Evaluate your model in the Firebase console
                 // to determine an appropriate threshold.
                 .build();
 
@@ -400,7 +438,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                     });
         } catch (FirebaseMLException e) {
             e.printStackTrace();
-            Log.d("customlabel", "fail: "+e.toString());
+            Log.d("nhatnhat", "fail: "+e.toString());
         }
 
     }
@@ -442,36 +480,41 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
     }
     @Override
     public void onBitmapReady(Bitmap bitmap) {
-//        try {
-//            if(bitmap.getWidth()<bitmap.getHeight()){
-//                Bitmap card = Bitmap.createBitmap(RotateBitmap(bitmap,90),396,536, 1037-396, 607-536);
-//                Log.d("nhatnhat", "onBitmapReady: "+card.getWidth()+"/"+card.getHeight());
-//
-//                FirebaseVisionImage image = createFirebaseVisionImage(bitmap);
-//                getTextFromImage(image);
-//                ImageView imageView = findViewById(R.id.iv_main);
-//                imageView.setImageBitmap(bitmap);
-//            }else {
-
-        try {
-
-             String fileName = "yyyyMMdd_hhmmss";
-             String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
-             String fileType = "PNG";
-              Bitmap card = Bitmap.createBitmap(bitmap,398,536, 766, 65);
-        Log.d("nhatnhat", "onBitmapReady: "+card.getWidth()+"/"+card.getHeight());
-            File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this, card, "111111", filePath, fileType);
-//
-                FirebaseVisionImage image = createFirebaseVisionImage(card);
-                getTextFromImage(image);
-                ImageView imageView = findViewById(R.id.iv_main);
-                imageView.setImageBitmap(bitmap);
+        if(bitmap.getWidth()>bitmap.getHeight()){
+            String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
+            String fileType = "PNG";
+            try {
+                File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this, bitmap, "wlh", filePath, fileType);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+            CardsManager.getInstance().process(bitmap, this, new CardsManager.OnCardSplistListener() {
+                @Override
+                public void OnCardSplistCompleted(List<Bitmap> cards,List<Bitmap> suit) {
+                    for (int i = 0; i <cards.size() ; i++) {
+                        FirebaseVisionImage card = createFirebaseVisionImage(cards.get(i));
+                        getTextFromImage(card,suit);
+                    }
 
-        catch (Exception e){}
-//        getLabelFromImage(image);
-//        getLabelFromCustom(image);
-//        trackObjectFromImage(image);
+                }
+
+            });
+        }else {
+            String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
+            String fileType = "PNG";
+            try {
+                File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this, bitmap, "wlh", filePath, fileType);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Log.d("nhatnhat", "onBitmapReady: hotiziontal");
+        }
+
+
+//            FirebaseVisionImage image = createFirebaseVisionImage(card);
+//            getTextFromImage(image);
+//            ImageView imageView = findViewById(R.id.iv_main);
+//            imageView.setImageBitmap(bitmap);
+
     }
-
 }

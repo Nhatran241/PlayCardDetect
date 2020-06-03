@@ -144,11 +144,9 @@ public class CaptureManager {
                                 Image.Plane[] planes = image.getPlanes();
                                 ByteBuffer buffer = planes[0].getBuffer();
                                 int pixelStride = planes[0].getPixelStride(), rowStride = planes[0].getRowStride(), rowPadding = rowStride - pixelStride * width;
+
                                 bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
                                 bitmap.copyPixelsFromBuffer(buffer);
-//                                Bitmap newBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
-//                                bitmap.recycle();
-//                                reader.close();
                                 virtualDisplay.release();
                                 image.close();
                                 return bitmap;
