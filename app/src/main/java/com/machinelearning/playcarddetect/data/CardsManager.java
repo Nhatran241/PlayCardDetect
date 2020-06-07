@@ -22,28 +22,12 @@ public class CardsManager {
         return instance;
     }
     public void process(Bitmap bitmap, Context context,OnCardSplistListener onCardSplistListener){
-        String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
-        String fileType = "PNG";
 //        List<Bitmap> cardsBitmap = splistCardsFromBitmap(13,407,538,59,55,bitmap);
-        List<Bitmap> cardsBitmap = splistCardsFromBitmap(1,407,538,767,100,bitmap);
+        List<Bitmap> cardsBitmap = splistCardsFromBitmap(13,407,590,58,50,bitmap);
 //        List<Bitmap> cardsBitmap = splistCardsFromBitmap(13,407,538,59,60,bitmap);
 //        List<Bitmap> suits = splistCardsFromBitmap(1,407,538+60,59,60,bitmap);
-        for (int i = 0; i <cardsBitmap.size() ; i++) {
-            try {
-                File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(context, cardsBitmap.get(i), i+"a", filePath, fileType);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-//        for (int i = 0; i <suits.size() ; i++) {
-//            try {
-//                File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(context, suits.get(i), i+"a", filePath, fileType);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-        Log.d("nhatnhat", "process: "+cardsBitmap.size());
-        onCardSplistListener.OnCardSplistCompleted(cardsBitmap,null);
+
+        onCardSplistListener.OnCardSplistCompleted(cardsBitmap);
 
     }
     public List<Bitmap> splistCardsFromBitmap(int numcard,int startX,int startY,int cardW,int cardH,Bitmap bitmap){
@@ -57,6 +41,6 @@ public class CardsManager {
         return cardsBitmap;
     }
     public interface OnCardSplistListener{
-       void OnCardSplistCompleted(List<Bitmap> cards,List<Bitmap> suit);
+       void OnCardSplistCompleted(List<Bitmap> cards);
     }
 }

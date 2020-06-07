@@ -23,6 +23,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,6 +38,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.ml.common.FirebaseMLException;
 import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions;
 import com.google.firebase.ml.common.modeldownload.FirebaseModelManager;
@@ -61,7 +64,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -80,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
     private FirebaseVisionObjectDetector objectDetector;
     private   FirebaseAutoMLRemoteModel remoteModel;
     private BroadcastReceiver takeBitmapOnTime;
+    private FirebaseFirestore db;
 
 
     private WindowManager mWindowManager;
@@ -98,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initServer();
         initPlayerData();
         initExtractText();
         initCustomLabel();
@@ -152,6 +159,31 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                 captureManager.takeScreenshot();
             }
         });
+    }
+
+    private void initServer() {
+        db = FirebaseFirestore.getInstance();
+        Map<String, Object> card = new HashMap<>();
+        card.put("index","");
+        card.put("image64","");
+
+        for (int i = 0; i <13 ; i++) {
+            db.collection("cards").document("card"+i).set(card)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d("nhatnhat", "DocumentSnapshot added with ID: " );
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w("nhatnhat", "Error adding document"+e.toString(), e);
+                        }
+                    });
+        }
+
+
     }
 
     private void initPlayerData() {
@@ -225,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
             });
         }
     }
-    private void getTextFromImage(final FirebaseVisionImage card, final List<Bitmap> suit) {
+    private void getTextFromImage(final FirebaseVisionImage card) {
         Task<FirebaseVisionText> result =
                 detector.processImage(card)
                         .addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
@@ -234,16 +266,19 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                                 /**
                                  * Extract text from result
                                  */
-                                for (FirebaseVisionText.TextBlock block: firebaseVisionText.getTextBlocks()) {
-                                    for (FirebaseVisionText.Line line: block.getLines()) {
-                                        for (final FirebaseVisionText.Element element: line.getElements()) {
-                                            Log.d("nhatnhat", "------------------------");
-                                            if(element.getText().length()>1){
-//                                                int width =(element.getBoundingBox().right-element.getBoundingBox().left)/element.getText().length();
-//                                                Log.d("nhatnhat", "onSuccess: "+element.getText());
+                                Log.d("nhatnhat", "bitmap: "+"h:"+card.getBitmap().getHeight()+" "+"w:"+card.getBitmap().getWidth());
+//                                    for (FirebaseVisionText.Line line: block.getLines()) {
+//                                        String linetext=line.getText().replaceAll("\\s","");
+//                                        Rect rect = line.getBoundingBox();
+
+
+//                                        Log.d("nhatnhat", "------------------------"+line.getText().replaceAll("\\s","")+" left :"+line.getBoundingBox().left+" right :"+line.getBoundingBox().right +" w :"+(line.getBoundingBox().right-line.getBoundingBox().left));
+//                                        for (final FirebaseVisionText.Element element: line.getElements()) {
+//                                            if(element.getText().length()>1){
 //                                                for (int i = 0; i <element.getText().length() ; i++) {
-//                                                    String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
-//                                                    Bitmap bitmap1 = Bitmap.createBitmap(card.getBitmap(),element.getBoundingBox().left+(width*i),element.getBoundingBox().bottom-10,50,50);
+//                                                    int indexOfChar=linetext.indexOf(element.getText().charAt(i));
+//                                                    String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator+"card";
+//                                                    final Bitmap bitmap1 = Bitmap.createBitmap(card.getBitmap(),line.getBoundingBox().left+width*indexOfChar,0,width,60);
 //                                                    String fileType = "PNG";
 //                                                    try {
 //                                                        File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(MainActivity.this, bitmap1, element.getText().charAt(i)+"", filePath, fileType);
@@ -251,129 +286,25 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 //                                                        e.printStackTrace();
 //                                                    }
 //                                                    getLabelFromCustom(createFirebaseVisionImage(bitmap1),element.getText().charAt(i)+"");
+//                                                }
+//                                            }else {
+//                                                Log.d("nhatnhat", "onSuccess: "+element.getText()+linetext.indexOf(element.getText()));
+//                                                int indexOfChar=linetext.indexOf(element.getText());
+//                                                String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator+"card";
+//                                                final Bitmap bitmap1 = Bitmap.createBitmap(card.getBitmap(),line.getBoundingBox().left+width*indexOfChar,0,width,60);
+//                                                String fileType = "PNG";
+//                                                try {
+//                                                    File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(MainActivity.this, bitmap1, element.getText(), filePath, fileType);
+//                                                } catch (Exception e) {
+//                                                    e.printStackTrace();
+//                                                }
+//                                                getLabelFromCustom(createFirebaseVisionImage(bitmap1),element.getText());
 //
-//                                                }
-                                            }else {
-                                                Log.d("nhatnhat", "onSuccess: "+element.getText());
-                                                String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
-                                                final Bitmap bitmap1 = Bitmap.createBitmap(card.getBitmap(), (int) (element.getBoundingBox().exactCenterX()-16),60,32,32);
-                                                String fileType = "PNG";
-                                                try {
-                                                    File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(MainActivity.this, bitmap1, element.getText(), filePath, fileType);
-                                                } catch (Exception e) {
-                                                    e.printStackTrace();
-                                                }
-
-                                                getLabelFromCustom(createFirebaseVisionImage(bitmap1),element.getText());
-
-                                            }
-
-                                        }
-                                    }
-                                }
-
-//                                if(blocks.size()>3) {
-//                                    for (int i = 0; i <blocks.size() ; i++) {
-//                                        Log.d("nhatnhat", "block :: "+blocks.get(i).getText());
-//                                    }
-//                                    String playercard = blocks.get(blocks.size()-3).getText();
-//                                    for (int i = 0; i <playercard.length() ; i++) {
-//                                        if(playercard.charAt(i)!=' '){
-//                                            boolean hasone =false;
-//                                            for (Card card:playercards) {
-//                                                if(card.getCardLevel().equals(playercard.charAt(i)+"")){
-//                                                    hasone=true;
-//                                                }
 //                                            }
-//                                            if(!hasone&&playercards.size()<13)
-//                                                playercards.add(new Card(playercard.charAt(i)+"",""));
+//
 //                                        }
 //                                    }
-//                                    Log.d(TAG, "playercard:---------------------------------------- ");
-//                                    for (int i = 0; i <playercards.size() ; i++) {
-//                                        Log.d(TAG, "playercard: "+playercards.get(i).getCardLevel());
-//                                    }
-////
-//                                }else {
-//                                    Toast.makeText(MainActivity.this, "No View To Detect", Toast.LENGTH_SHORT).show();
-//                                }
-//                                String resultText = firebaseVisionText.getText();
-//                                for (FirebaseVisionText.TextBlock block: firebaseVisionText.getTextBlocks()) {
-//                                    String blockText = block.getText();
-//                                    Float blockConfidence = block.getConfidence();
-//                                    List<RecognizedLanguage> blockLanguages = block.getRecognizedLanguages();
-//                                    Point[] blockCornerPoints = block.getCornerPoints();
-//                                    Rect blockFrame = block.getBoundingBox();
-//
-////                                    for (FirebaseVisionText.Line line: block.getLines()) {
-////                                        String lineText = line.getText();
-////                                        Float lineConfidence = line.getConfidence();
-////                                        List<RecognizedLanguage> lineLanguages = line.getRecognizedLanguages();
-////                                        Point[] lineCornerPoints = line.getCornerPoints();
-////                                        Rect lineFrame = line.getBoundingBox();
-////                                        Log.d("nhatnhat", "line text: "+lineText+" location :"+lineFrame.top);
-////
-////
-////                                        Bitmap bitmap = image.getBitmap();
-////                                        if(bitmap.getHeight()>bitmap.getWidth()){
-////                                            bitmap = RotateBitmap(bitmap,90);
-////                                        }
-////                                        Log.d("nhatnhat", "new calculation"+bitmap.getHeight()+"/"+bitmap.getWidth());
-////                                        for (FirebaseVisionText.Element element: line.getElements()) {
-////                                            String elementText = element.getText();
-////                                            Float elementConfidence = element.getConfidence();
-////                                            List<RecognizedLanguage> elementLanguages = element.getRecognizedLanguages();
-////                                            Point[] elementCornerPoints = element.getCornerPoints();
-////                                            if(elementText.equals("A")||elementText.equals("2")||elementText.equals("3")||elementText.equals("4")
-////                                                    ||elementText.equals("5")||elementText.equals("6")||elementText.equals("7")||elementText.equals("8")
-////                                                    ||elementText.equals("9")||elementText.equals("10")||elementText.equals("J")||elementText.equals("K")
-////                                                    ||elementText.equals("Q")) {
-////                                                Rect elementFrame = element.getBoundingBox();
-////                                                if(bitmap.getHeight()>bitmap.getWidth()) {
-////
-////                                                }else {
-////                                                    if(element.getBoundingBox().top<bitmap.getHeight()/2){
-////                                                        /**
-////                                                         * Player cards
-////                                                         */
-//////                                                        Bitmap card = Bitmap.createBitmap(bitmap,elementFrame.left,elementFrame.bottom, 50, 50);
-//////                                                        ImageView imageView = findViewById(R.id.iv_main);
-//////                                                        imageView.setImageBitmap(bitmap);
-//////                                                        getLabelFromCustom(createFirebaseVisionImage(card),elementText);
-////                                                        Log.d("nhatnhat", "player card"+elementText+" :"+"y="+element.getBoundingBox().top);
-////
-////                                                    }else if(element.getBoundingBox().top<bitmap.getHeight()*3/4&&element.getBoundingBox().top>bitmap.getHeight()/4){
-////                                                        /**
-////                                                         * Table cards
-////                                                         */
-////                                                        Log.d("nhatnhat", "table card"+elementText);
-////
-//////                                                        Bitmap card = Bitmap.createBitmap(bitmap,elementFrame.left,elementFrame.bottom, 50, 50);
-//////                                                        ImageView imageView = findViewById(R.id.iv_main);
-//////                                                        imageView.setImageBitmap(bitmap);
-//////                                                        getLabelFromCustom(createFirebaseVisionImage(card),elementText);
-////                                                    }
-////                                                }
-////
-//////                                                    }
-//////                                                }
-//////                                                rect.setVisibility(View.VISIBLE);
-//////                                                ImageView view = new ImageView(MainActivity.this);
-//////                                                RelativeLayout.LayoutParams params;
-//////                                                params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-//////                                                params.leftMargin = elementFrame.left;
-//////                                                params.topMargin = elementFrame.top;
-////////                                            Bitmap card;
-//////                                                Log.d("customlabel", "-----------------");
-//////
-//////                                                Log.d("customlabel", "onSuccess: "+bitmap.getWidth()+"/"+bitmap.getHeight());
-//////                                                Log.d("customlabel", "onSuccess: "+elementFrame.left+":"+elementFrame.bottom);
-////
-//////                                                rect.addView(view, params);
-////                                            }
-////                                        }
-////                                    }
-//                                }
+
 
                             }
                         })
@@ -417,6 +348,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                 // to determine an appropriate threshold.
                 .build();
 
+        Log.d("nhatnhat", "checking "+text);
         FirebaseVisionImageLabeler labeler;
         try {
             labeler = FirebaseVision.getInstance().getOnDeviceAutoMLImageLabeler(options);
@@ -490,13 +422,39 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
             }
             CardsManager.getInstance().process(bitmap, this, new CardsManager.OnCardSplistListener() {
                 @Override
-                public void OnCardSplistCompleted(List<Bitmap> cards,List<Bitmap> suit) {
+                public void OnCardSplistCompleted(final List<Bitmap> cards) {
                     for (int i = 0; i <cards.size() ; i++) {
-                        FirebaseVisionImage card = createFirebaseVisionImage(cards.get(i));
-                        getTextFromImage(card,suit);
-                    }
+                        final int finalI = i;
+                        String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator+"card";
+                        String fileType = "PNG";
+                        try {
+                            File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(MainActivity.this, cards.get(finalI), i+"", filePath, fileType);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
 
-                }
+                                getLabelFromCustom(createFirebaseVisionImage(cards.get(finalI)),""+ finalI);
+                            }
+                        }).start();
+//                        ByteArrayOutputStream bao = new ByteArrayOutputStream();
+//                        cards.get(i).compress(Bitmap.CompressFormat.PNG, 60, bao);
+//                        cards.get(i).recycle();
+//                        byte[] byteArray = bao.toByteArray();
+//                        String imageB64 = Base64.encodeToString(byteArray, Base64.URL_SAFE);
+//                        Map<String, Object> card = new HashMap<>();
+//                        card.put("index",i);
+//                        card.put("image64",imageB64);
+//
+//                        db.collection("cards").document("card"+i)
+//                                .update(card);
+//                        FirebaseVisionImage card = createFirebaseVisionImage(cards.get(i));
+//                        getTextFromImage(card);
+
+
+                }}
 
             });
         }else {
