@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 29
@@ -21,9 +20,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // Do NOT compress tflite model files (need to call out to developers!)
+    aaptOptions {
+        noCompress "tflite"
+    }
 
 }
-
+repositories {
+    maven { url 'https://google.bintray.com/tensorflow' }
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -36,10 +46,11 @@ dependencies {
 
     /** machine learning kit */
 
-    implementation 'com.google.firebase:firebase-ml-vision:24.0.3'
-    implementation 'com.google.firebase:firebase-ml-vision-image-label-model:20.0.1'
-    implementation 'com.google.firebase:firebase-ml-vision-automl:18.0.5'
-    implementation 'com.google.firebase:firebase-ml-vision-object-detection-model:19.0.5'
 
     implementation 'com.google.firebase:firebase-firestore:21.4.3'
+
+
+    // Object detection and tracking feature with custom classifier
+    implementation 'com.google.mlkit:object-detection-custom:16.0.0'
 }
+
