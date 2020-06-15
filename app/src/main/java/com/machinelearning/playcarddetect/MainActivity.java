@@ -102,6 +102,12 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 //        initCustomLabel();
         requestCapture();
         initObjectDetection();
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            // Show alert dialog to the user saying a separate permission is needed
+            // Launch the settings activity if the user prefers
+            Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+            startActivity(myIntent);
+        }
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         overlayIcon = LayoutInflater.from(this).inflate(R.layout.bubble_layout, null);
         overlayIcon.setOnClickListener(new View.OnClickListener() {
@@ -235,41 +241,49 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
     }
     @Override
     public void onBitmapReady(final Bitmap bitmap) {
+        InputImage image = InputImage.fromBitmap(bitmap, 0);
+        objectDetector.process(image)
+                .addOnSuccessListener(
+                        new OnSuccessListener<List<DetectedObject>>() {
+                            @Override
+                            public void onSuccess(List<DetectedObject> detectedObjects) {
+                                for (DetectedObject object:
+                                     detectedObjects) {
+                                    String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator+"nhatnhat";
+                                    String fileType = "PNG";
+                                    Rect rect = object.getBoundingBox();
+                                    Bitmap bitmap1 = Bitmap.createBitmap(bitmap,rect.left,rect.top,(rect.right-rect.left),(rect.bottom-rect.top));
+//                                    if(bitmap1.getWidth()>bitmap.getWidth()/2){
+                                        int numbercard = bitmap1.getWidth()/58;
+                                        List<Bitmap> bitmaps = splistCardsFromBitmap(numbercard,0,0,58,bitmap1.getHeight(),bitmap1);
+                                        for (int i = 0; i <bitmaps.size() ; i++) {
+                                            InputImage image = InputImage.fromBitmap(bitmaps.get(i), 0);
+                                            objectDetector.process(image).addOnSuccessListener(new OnSuccessListener<List<DetectedObject>>() {
+                                                @Override
+                                                public void onSuccess(List<DetectedObject> detectedObjects) {
+                                                    for (DetectedObject object:
+                                                         detectedObjects) {
+                                                        for (DetectedObject.Label la:object.getLabels())
+                                                          {
+                                                              Log.d(TAG, "onSuccess: "+la.getText());
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                        }
 
-            long start = System.currentTimeMillis();
-//        int [] allpixels = new int [bitmap.getHeight() * bitmap.getWidth()];
-//
-//        bitmap.getPixels(allpixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                                    }
+//                                }
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d(TAG, "onFailure: "+e.toString());
+                            }
+                        });
 
-        int startx = -1,starty=-1;
-        int stopx=-1,stopy=-1;
-        for (int i = 0; i <bitmap.getHeight() ; i++) {
-            for (int j = 0; j <bitmap.getWidth() ; j++) {
-                int colour = bitmap.getPixel(j, i);
-
-                int red = Color.red(colour);
-                int blue = Color.blue(colour);
-                int green = Color.green(colour);
-//                Log.d(TAG, "onBitmapReady: "+red+"/"+green+"/"+blue);
-                if(255-red<30&&255-blue<30&&255-green<30){
-                    bitmap.setPixel(j,i,Color.rgb(0,0,0));
-                }else {
-
-                }
-            }
-        }
-//        Bitmap croppedBitmap = Bitmap.createBitmap(bitmap1, startx, starty, stopx-startx, stopy-starty);
-
-//        Log.d(TAG, "onBitmapReady: "+croppedBitmap.getWidth()+"/"+croppedBitmap.getHeight());
-        String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator+"test";
-        String fileType = "PNG";
-        try {
-            File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this, bitmap, System.currentTimeMillis()+"", filePath, fileType);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }finally {
-            bitmap.recycle();
-        }
 
 //        if(bitmap.getWidth()>bitmap.getHeight()){
 //            CardsManager.getInstance().process(bitmap, this, new CardsManager.OnCardSplistListener() {
@@ -317,4 +331,15 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 
 
     }
+    public List<Bitmap> splistCardsFromBitmap(int numcard,int startX,int startY,int cardW,int cardH,Bitmap bitmap){
+        List<Bitmap> cardsBitmap = new ArrayList<>();
+        for (int i = 0; i <numcard ; i++) {
+            Bitmap bitmap1 = Bitmap.createBitmap(bitmap,startX+cardW*i,startY,cardW,cardH);
+            cardsBitmap.add(bitmap1);
+        }
+
+
+        return cardsBitmap;
+    }
+
 }
