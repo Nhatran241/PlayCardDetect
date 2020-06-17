@@ -52,5 +52,7 @@ dependencies {
 
     // Object detection and tracking feature with custom classifier
     implementation 'com.google.mlkit:object-detection-custom:16.0.0'
+    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:16.0.0'
+
 }
 

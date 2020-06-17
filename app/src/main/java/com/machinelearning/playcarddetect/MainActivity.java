@@ -46,6 +46,9 @@ import com.google.mlkit.vision.objects.DetectedObject;
 import com.google.mlkit.vision.objects.ObjectDetection;
 import com.google.mlkit.vision.objects.ObjectDetector;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
+import com.google.mlkit.vision.text.Text;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
 import com.machinelearning.playcarddetect.data.Card;
 import com.machinelearning.playcarddetect.data.CardsManager;
 import com.machinelearning.playcarddetect.reciver.TakeBitmapOnTime;
@@ -71,10 +74,8 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
      *
      */
     private CaptureManager captureManager;
-//    private FirebaseVisionTextRecognizer detector;
-//    private FirebaseVisionImageLabeler labeler;
-//    private FirebaseVisionObjectDetector objectDetector;
-//    private   FirebaseAutoMLRemoteModel remoteModel;
+    private TextRecognizer recognizer;
+
     private BroadcastReceiver takeBitmapOnTime;
     private FirebaseFirestore db;
     private ObjectDetector objectDetector;
@@ -90,16 +91,15 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
      * Player data
      */
     private List<Card> playercards;
+    private List<Bitmap> suits;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        initServer();
+        initExtractText();
         initPlayerData();
-//        initExtractText();
-//        initCustomLabel();
         requestCapture();
         initObjectDetection();
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
@@ -161,6 +161,10 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
         });
     }
 
+    private void initExtractText() {
+        recognizer = TextRecognition.getClient();
+    }
+
     private void initObjectDetection() {
         LocalModel localModel =
                 new LocalModel.Builder()
@@ -182,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 
     private void initPlayerData() {
         playercards = new ArrayList<>();
+        suits = new ArrayList<>();
     }
 
 
@@ -241,96 +246,117 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
     }
     @Override
     public void onBitmapReady(final Bitmap bitmap) {
-        InputImage image = InputImage.fromBitmap(bitmap, 0);
-        objectDetector.process(image)
-                .addOnSuccessListener(
-                        new OnSuccessListener<List<DetectedObject>>() {
-                            @Override
-                            public void onSuccess(List<DetectedObject> detectedObjects) {
-                                for (DetectedObject object:
-                                     detectedObjects) {
-                                    String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator+"nhatnhat";
-                                    String fileType = "PNG";
-                                    Rect rect = object.getBoundingBox();
-                                    Bitmap bitmap1 = Bitmap.createBitmap(bitmap,rect.left,rect.top,(rect.right-rect.left),(rect.bottom-rect.top));
-//                                    if(bitmap1.getWidth()>bitmap.getWidth()/2){
-                                        int numbercard = bitmap1.getWidth()/58;
-                                        List<Bitmap> bitmaps = splistCardsFromBitmap(numbercard,0,0,58,bitmap1.getHeight(),bitmap1);
-                                        for (int i = 0; i <bitmaps.size() ; i++) {
-                                            InputImage image = InputImage.fromBitmap(bitmaps.get(i), 0);
-                                            objectDetector.process(image).addOnSuccessListener(new OnSuccessListener<List<DetectedObject>>() {
-                                                @Override
-                                                public void onSuccess(List<DetectedObject> detectedObjects) {
-                                                    for (DetectedObject object:
-                                                         detectedObjects) {
-                                                        for (DetectedObject.Label la:object.getLabels())
-                                                          {
-                                                              Log.d(TAG, "onSuccess: "+la.getText());
-                                                        }
-                                                    }
-                                                }
-                                            });
-                                        }
+//        InputImage image = InputImage.fromBitmap(Bitmap.createBitmap(bitmap,0,bitmap.getHeight()/2,bitmap.getWidth(),bitmap.getHeight()/2), 0);
+        float ratio = bitmap.getWidth()/bitmap.getHeight();
+        Bitmap bitmap1 = Bitmap.createScaledBitmap(bitmap, 720, (int) (720/ratio), false);
 
+        InputImage image = InputImage.fromBitmap(bitmap1,0);
+        Task<Text> result =
+                recognizer.process(image)
+                        .addOnSuccessListener(new OnSuccessListener<Text>() {
+                            @Override
+                            public void onSuccess(Text visionText) {
+                                List<Card> list = new ArrayList<>();
+                                int x=0,y=0,height=0;
+                                for (int i = 0; i <visionText.getTextBlocks().size() ; i++) {
+                                    for (Text.Line line :visionText.getTextBlocks().get(i).getLines()
+                                         ) {
+                                        for (Text.Element element:
+                                             line.getElements()) {
+                                            Rect textRect = element.getBoundingBox();
+                                            if(x==0)
+                                                x=textRect.left;
+                                            String cardName = element.getText().trim().toString();
+                                            if(cardName.equals("A")||cardName.equals("2")||cardName.equals("3")||
+                                                    cardName.equals("4")||cardName.equals("5")||cardName.equals("6")||
+                                                    cardName.equals("7")||cardName.equals("8")||cardName.equals("9")||
+                                                    cardName.equals("10")||cardName.equals("J")||cardName.equals("Q")||
+                                                    cardName.equals("K")||cardName.equals("1")||cardName.equals("0")){
+
+                                                String suit = checkSuitOfCard(textRect, bitmap1, cardName);
+                                                list.add(new Card(cardName, suit));
+                                            }
+
+//                                            Log.d(TAG, ""+element.getText()+" width"+(textRect.right-textRect.left)+" centerx "+textRect.centerX());
+                                        }
                                     }
-//                                }
+                                }
                             }
                         })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.d(TAG, "onFailure: "+e.toString());
-                            }
-                        });
+                        .addOnFailureListener(
+                                new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.d(TAG, "onFailure: "+e.toString());
+                                    }
+                                });
 
 
-//        if(bitmap.getWidth()>bitmap.getHeight()){
-//            CardsManager.getInstance().process(bitmap, this, new CardsManager.OnCardSplistListener() {
-//                @Override
-//                public void OnCardSplistCompleted(final List<Bitmap> cards) {
-//                    for (int i = 0; i <cards.size() ; i++) {
-//                        InputImage image = InputImage.fromBitmap(cards.get(i), 0);
-//                        objectDetector
-//                                .process(image)
-//                                .addOnFailureListener(new OnFailureListener() {
-//                                    @Override
-//                                    public void onFailure(@NonNull Exception e) {
-//                                        Log.d("nhatnhat", "onFailure: "+e.toString());
-//                                    }
-//                                })
-//                                .addOnSuccessListener(new OnSuccessListener<List<DetectedObject>>() {
-//                                    @Override
-//                                    public void onSuccess(List<DetectedObject> results) {
-//                                        for (DetectedObject detectedObject : results) {
-//                                            Rect boundingBox = detectedObject.getBoundingBox();
-//                                            Integer trackingId = detectedObject.getTrackingId();
-//                                            for (DetectedObject.Label label : detectedObject.getLabels()) {
-//                                                String text = label.getText();
-//                                                int index = label.getIndex();
-//                                                float confidence = label.getConfidence();
-//                                                Log.d("nhatnhat", "onSuccess: "+boundingBox.centerX()+"/"+text);
-//                                            }
-//                                        }
-//                                    }
-//                                });
-//
-//                }}
-//
-//            });
-//        }else {
-//            String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator;
-//            String fileType = "PNG";
-//            try {
-//                File file = SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this, bitmap, "wlh", filePath, fileType);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            Log.d("nhatnhat", "onBitmapReady: hotiziontal");
-//        }
+
 
 
     }
+
+    private String checkSuitOfCard(Rect rect,Bitmap bitmap,String cardname) {
+        int maxleft=rect.centerX()-10;
+        int maxright=rect.centerX()+10;
+
+        Log.d(TAG, "checkSuitOfCard: "+cardname);
+        Bitmap smallBitmap = bitmap.createBitmap(bitmap,maxleft,rect.bottom+1,maxright-maxleft,maxright-maxleft);
+//        suits.add(smallBitmap);
+        String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "graysclae";
+        try {
+            SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this,smallBitmap,cardname,filePath,"PNG");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        int[] coverImageIntArray1D = new int[smallBitmap.getWidth() * smallBitmap.getHeight()];
+        smallBitmap.getPixels(coverImageIntArray1D, 0, smallBitmap.getWidth(),
+                0, 0, smallBitmap.getWidth(), smallBitmap.getHeight());
+
+        int firstMatch=0,lastMatch=0; // Same row
+        int maxMatch=0;
+        for (int i = 0; i <smallBitmap.getHeight() ; i++) {
+            int maxMatchInRow=0;
+            String pixelinRow="";
+            for (int j = 0; j <smallBitmap.getWidth() ; j++) {
+                int pixel = coverImageIntArray1D[j + i*smallBitmap.getWidth()];
+                int red = Color.red(pixel);
+                int blue = Color.blue(pixel);
+                int green = Color.green(pixel);
+                String reds=red+"",blues=blue+"",greens=green+"";
+                if(red<100)
+                    reds=0+""+red;
+
+                if(blue<100)
+                    blues=0+""+blue;
+
+                if(green<100)
+                    greens=0+""+green;
+                pixelinRow+=reds+"   ";
+                if(red<150&&blue<150&&green<150){
+                    maxMatchInRow++;
+                    if(firstMatch==0) {
+                        firstMatch = j;
+                    }else {
+                        if(j>lastMatch)
+
+                            lastMatch =j;
+                    }
+                    if(maxMatchInRow>maxMatch)
+                        maxMatch = maxMatchInRow;
+                }
+
+
+            }
+            Log.d(TAG, "checkSuitOfCard: "+pixelinRow +"\n");
+        }
+
+        if(lastMatch-firstMatch>maxMatch*7/10){
+        }
+        return "";
+    }
+
     public List<Bitmap> splistCardsFromBitmap(int numcard,int startX,int startY,int cardW,int cardH,Bitmap bitmap){
         List<Bitmap> cardsBitmap = new ArrayList<>();
         for (int i = 0; i <numcard ; i++) {
