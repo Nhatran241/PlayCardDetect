@@ -5,6 +5,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.hardware.display.DisplayManager;
@@ -147,9 +151,18 @@ public class CaptureManager {
 
                                 bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
                                 bitmap.copyPixelsFromBuffer(buffer);
+                                Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                                Canvas c = new Canvas(bmpGrayscale);
+                                Paint paint = new Paint();
+                                ColorMatrix cm = new ColorMatrix();
+                                cm.setSaturation(0);
+                                ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+                                paint.setColorFilter(f);
+                                c.drawBitmap(bitmap, 0, 0, paint);
+                                bitmap.recycle();
                                 virtualDisplay.release();
                                 image.close();
-                                return bitmap;
+                                return bmpGrayscale;
                             }
                         } catch (Exception e) {
                             Log.d("nhatnhat", "doInBackground: " + e.toString());
