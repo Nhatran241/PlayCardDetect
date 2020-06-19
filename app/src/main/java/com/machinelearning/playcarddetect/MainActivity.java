@@ -101,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
         initExtractText();
         initPlayerData();
         requestCapture();
-        initObjectDetection();
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
             // Show alert dialog to the user saying a separate permission is needed
             // Launch the settings activity if the user prefers
@@ -165,23 +164,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
         recognizer = TextRecognition.getClient();
     }
 
-    private void initObjectDetection() {
-        LocalModel localModel =
-                new LocalModel.Builder()
-                        .setAssetFilePath("model.tflite")
-                        // or .setAbsoluteFilePath(absolute file path to tflite model)
-                        .build();
-        CustomObjectDetectorOptions customObjectDetectorOptions =
-                new CustomObjectDetectorOptions.Builder(localModel)
-                        .setDetectorMode(CustomObjectDetectorOptions.SINGLE_IMAGE_MODE)
-                        .enableMultipleObjects()
-                        .enableClassification()
-                        .setClassificationConfidenceThreshold(0.5f)
-                        .setMaxPerObjectLabelCount(3)
-                        .build();
-        objectDetector =
-                ObjectDetection.getClient(customObjectDetectorOptions);
-    }
+
 
 
     private void initPlayerData() {
@@ -236,13 +219,6 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                 }
             });
         }
-    }
-    private byte[][] conver1dTo2d(byte[] arr, int w, int h){
-        byte[][] answer = new byte[h][w];
-        for(int i = 0 ; i<arr.length; i++){
-            answer[i/w][i%w] = arr[i];
-        }
-        return answer;
     }
     @Override
     public void onBitmapReady(final Bitmap bitmap) {
@@ -338,30 +314,25 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
         if (rect.right + maxright - maxleft > bitmap.getWidth())
             return "Not a card";
         Bitmap smallBitmap = bitmap.createBitmap(bitmap, maxleft, rect.bottom + 1, maxright - maxleft, maxright - maxleft);
-//        String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "nhatnhatnhat";
-//        try {
-//            SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this,smallBitmap,cardname,filePath,"PNG");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
         int[] coverImageIntArray1D = new int[smallBitmap.getWidth() * smallBitmap.getHeight()];
         smallBitmap.getPixels(coverImageIntArray1D, 0, smallBitmap.getWidth(),
                 0, 0, smallBitmap.getWidth(), smallBitmap.getHeight());
 
-        // Co
-        int firstMatchFirstRow = 0, lastMatchLastRow = 0;
-        int firstRow = 0;
-        int countMatchInFisrtRow = 0;
-        int countMatchInMaxRow = 0;
-        //Ro
-        int maxRowPixelCount = 0;
-        int columHeight = 0;
-        boolean inObjectRow = false;
+        int[] firstMatchFirstRow =new int[2];
+        int[] lastMatchFirstRow =new int[2];
+        int[] lastMatchLastRow =new int[2];
+
+        firstMatchFirstRow[0]=0;
+        firstMatchFirstRow[1]=0;
+
+        lastMatchFirstRow[0]=0;
+        lastMatchFirstRow[1]=0;
+
+        lastMatchLastRow[0]=0;
+        lastMatchLastRow[1]=0;
 
         for (int i = 0; i < smallBitmap.getHeight(); i++) {
-            int maxMatchInRow = 0;
             String pixelinRow = "";
-            int rowPixelCount = 0;
             for (int j = 0; j < smallBitmap.getWidth(); j++) {
                 int pixel = coverImageIntArray1D[j + i * smallBitmap.getWidth()];
                 int red = Color.red(pixel);
@@ -370,85 +341,26 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                     reds = 0 + "" + red;
                 pixelinRow += reds + "   ";
                 if (red < 100) {
-                    columHeight++;
-                    //Diamond
-                    inObjectRow = true;
-                    //Hearth
-                    rowPixelCount++;
-                    if (firstMatchFirstRow == 0) {
-                        firstMatchFirstRow = j;
-                        firstRow = i;
+                    lastMatchLastRow[0]=j;
+                    lastMatchLastRow[1]=i;
+                    if (firstMatchFirstRow[0] == 0) {
+                        firstMatchFirstRow[0] = j;
+                        firstMatchFirstRow[1] = i;
                     }
-                    maxMatchInRow++;
-                    if (i == firstRow)
-                        countMatchInFisrtRow++;
+                    if (i == firstMatchFirstRow[1]) {
+                        lastMatchFirstRow[0] = j;
+                        lastMatchFirstRow[1] = i;
+                    }
 
                 }
 
 
             }
-            if (maxMatchInRow > countMatchInMaxRow)
-                countMatchInMaxRow = maxMatchInRow;
-            if (inObjectRow) {
-                if (rowPixelCount >= maxRowPixelCount) {
-                    columHeight++;
-                } else {
-                    columHeight--;
-                }
-                maxRowPixelCount = rowPixelCount;
-            }
-
-            inObjectRow = false;
 
 
             Log.d(TAG, "checkSuitOfCard: " + pixelinRow + "\n");
         }
-        Log.d(TAG, "checkSuitOfCard: "+cardname+" "+columHeight);
         return "";
-//        if (countMatchInFisrtRow >= countMatchInMaxRow / 2) {
-//            Log.d(TAG, "checkSuitOfCard: " + cardname + "is Hearth"+countMatchInFisrtRow+"/"+countMatchInMaxRow);
-//            return "Hearth";
-//        } else {
-//            if (countMatchInFisrtRow >= 3) {
-//                Log.d(TAG, "checkSuitOfCard:" + cardname + "is Club");
-//                return "Club";
-//            } else {
-//                if (Math.abs(columHeight) < 4) {
-//                    Log.d(TAG, "checkSuitOfCard:" + cardname + "is Diamond");
-//                    return "Diamond";
-//                } else {
-//                    Log.d(TAG, "checkSuitOfCard:" + cardname + "is Spade");
-//                    return "Spade";
-//                }
-//            }
-//        }
-//        if(Math.abs(lastMatchLastRow-firstMatchFirstRow)>=5){
-//            Log.d(TAG, "checkSuitOfCard:"+cardname+"is Hearth");
-//            return"Hearth";
-//        }else if(Math.abs(lastMatchLastRow-firstMatchFirstRow)<=3){
-//
-//        if(Math.abs(columHeight)<4){
-//            Log.d(TAG, "checkSuitOfCard:"+cardname+"is Diamond");
-//            return "Diamond";
-//        }else {
-//            Log.d(TAG, "checkSuitOfCard:"+cardname+"is Spade");
-//            return "Spade";
-//        }
-//        }else {
-//            Log.d(TAG, "checkSuitOfCard:"+cardname+"is Club");
-//            return "Club";
-//        }
-    }
-
-    public List<Bitmap> splistCardsFromBitmap(int numcard,int startX,int startY,int cardW,int cardH,Bitmap bitmap){
-        List<Bitmap> cardsBitmap = new ArrayList<>();
-        for (int i = 0; i <numcard ; i++) {
-            Bitmap bitmap1 = Bitmap.createBitmap(bitmap,startX+cardW*i,startY,cardW,cardH);
-            cardsBitmap.add(bitmap1);
-        }
-
-
-        return cardsBitmap;
     }
 
 }
