@@ -4,19 +4,15 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.util.Log;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
-import com.machinelearning.playcarddetect.data.MyAdapter;
 import com.machinelearning.playcarddetect.data.card.Card;
 import com.machinelearning.playcarddetect.data.card.Level;
 import com.machinelearning.playcarddetect.data.card.Suit;
@@ -113,6 +109,327 @@ public class GetCardDataManager {
                                 getCardDataFromBitmapListener.onGetDataFailed(e.toString());
                             }
                         });
+    }
+
+    public List<Bitmap> getCardsZoneBitmap(Bitmap baseBitmap , Rect zoneContainCardsZone,int patternColum,int patternZone){
+        List<Bitmap> bitmaps = new ArrayList<>();
+        Bitmap smallBitmap = Bitmap.createBitmap( getResizeBitmap(baseBitmap),zoneContainCardsZone.left, zoneContainCardsZone.top,
+                zoneContainCardsZone.right-zoneContainCardsZone.left,zoneContainCardsZone.bottom -zoneContainCardsZone.top);
+        Rect cardsZone = getCardsZoneFromBitmap(smallBitmap,patternZone);
+        if(cardsZone.right-cardsZone.left>0&&cardsZone.bottom-cardsZone.top>0){
+            Bitmap cards =Bitmap.createBitmap(smallBitmap,cardsZone.left,cardsZone.top,cardsZone.right-cardsZone.left,cardsZone.bottom-cardsZone.top);
+            bitmaps.addAll(splistCards(cards,patternColum));
+            if(bitmaps.size()>0){
+                int y = bitmaps.get(1).getHeight();
+                Log.d("nhatnhatasdasd", "getCardsZoneBitmap: "+cardsZone.top +"/"+y+"/"+cardsZone.bottom);
+                Bitmap suits =Bitmap.createBitmap(smallBitmap,cardsZone.left,cardsZone.top+y+7,cardsZone.right-cardsZone.left,y);
+                bitmaps.addAll(splistCards(suits,patternColum));
+            }
+
+
+        }
+        return bitmaps;
+
+
+    }
+
+    private List<Bitmap> splistCards(Bitmap cards,int patternColum) {
+        List<Bitmap> cardsAfterSplist = new ArrayList<>();
+        double ratio = (double) cards.getWidth() / (double) cards.getHeight();
+        if (ratio > 1) {
+            cardsAfterSplist.add(cards);
+            List<Rect> colums = new ArrayList<>();
+            int[] coverImageIntArray1D = new int[cards.getWidth() * cards.getHeight()];
+            cards.getPixels(coverImageIntArray1D, 0, cards.getWidth(),
+                    0, 0, cards.getWidth(), cards.getHeight());
+            Rect colum = new Rect();
+            colum.left =0;
+            colum.right=0;
+            outterloop:
+            for (int i = 0; i < cards.getHeight(); i++) {
+                for (int j = 0; j < cards.getWidth(); j++) {
+                    int pixel = coverImageIntArray1D[j + i * cards.getWidth()];
+                    if (Color.red(pixel) < patternColum) { // Tìm điểm đầu tiên của chữ
+                        if(colum.left==0) {
+                            colum.top = i;
+                            colum.left = j;
+                            colum.bottom = i;
+                            colum.right = j;
+                        }
+                    }else {
+                        if(colum.right!=0) {
+                            colum.right = j-1;
+                            colums.add(colum);
+                            colum = new Rect();
+                            colum.left =0;
+                            colum.right=0;
+                        }
+                    }
+                }
+                if(colums.size()!=0)
+                    break outterloop;
+            }
+
+            int cardWith=0;
+            try {
+
+
+                Log.d("nhatnahtatat", "splistCards: "+colums.size());
+                if(colums.size()>0) {
+                    cardWith = colums.get(0).left;
+                    Bitmap bitmap = Bitmap.createBitmap(cards,0, 0, cardWith, cards.getHeight());
+                    Rect numberRect0 = new Rect();
+                    int[] coverImageIntArray1D0 = new int[bitmap.getWidth() * bitmap.getHeight()];
+                    bitmap.getPixels(coverImageIntArray1D0, 0, bitmap.getWidth(),
+                            0, 0, bitmap.getWidth(), bitmap.getHeight());
+                    outterloop:
+                    for (int k = 0; k < bitmap.getHeight(); k++) {
+                        for (int j = 0; j < bitmap.getWidth(); j++) {
+                            int pixel = coverImageIntArray1D0[j + k * bitmap.getWidth()];
+                            if (Color.red(pixel) < 100) { // Tìm điểm đầu tiên của chữ
+                                numberRect0.top = k;
+                                numberRect0.left = j;
+                                numberRect0.bottom =k;
+                                numberRect0.right =j;
+                                break outterloop;
+                            }
+                        }
+                    }
+                    followPath(numberRect0,coverImageIntArray1D0,bitmap.getWidth(),bitmap.getHeight(),numberRect0.left,numberRect0.top);
+                    bitmap = Bitmap.createBitmap(bitmap,numberRect0.left,numberRect0.top,numberRect0.right-numberRect0.left,numberRect0.bottom-numberRect0.top);
+                    cardsAfterSplist.add(bitmap);
+                    for (int i = 0; i < colums.size(); i++) {
+                        bitmap = Bitmap.createBitmap(cards, colums.get(i).right, 0, cardWith, cards.getHeight());
+
+//                    cardsAfterSplist.add(bitmap);
+                        Rect numberRect = new Rect();
+                        int[] coverImageIntArray1D2 = new int[bitmap.getWidth() * bitmap.getHeight()];
+                        bitmap.getPixels(coverImageIntArray1D2, 0, bitmap.getWidth(),
+                                0, 0, bitmap.getWidth(), bitmap.getHeight());
+                        outterloop:
+                        for (int k = 0; k < bitmap.getHeight(); k++) {
+                            for (int j = 0; j < bitmap.getWidth(); j++) {
+                                int pixel = coverImageIntArray1D2[j + k * bitmap.getWidth()];
+                                if (Color.red(pixel) < 100) { // Tìm điểm đầu tiên của chữ
+                                    numberRect.top = k;
+                                    numberRect.left = j;
+                                    numberRect.bottom =k;
+                                    numberRect.right =j;
+                                    break outterloop;
+                                }
+                            }
+                        }
+                        followPath(numberRect,coverImageIntArray1D2,bitmap.getWidth(),bitmap.getHeight(),numberRect.left,numberRect.top);
+                        bitmap = Bitmap.createBitmap(bitmap,numberRect.left,numberRect.top,numberRect.right-numberRect.left,numberRect.bottom-numberRect.top);
+
+                        cardsAfterSplist.add(bitmap);
+                    }
+                }
+            }catch (Exception e){};
+        } else {
+
+            cardsAfterSplist.add(cards);
+            Rect numberRect = new Rect();
+            int[] coverImageIntArray1D = new int[cards.getWidth() * cards.getHeight()];
+            cards.getPixels(coverImageIntArray1D, 0, cards.getWidth(),
+                    0, 0, cards.getWidth(), cards.getHeight());
+            outterloop:
+            for (int i = 0; i < cards.getHeight(); i++) {
+                for (int j = 0; j < cards.getWidth(); j++) {
+                    int pixel = coverImageIntArray1D[j + i * cards.getWidth()];
+                    if (Color.red(pixel) < 100) { // Tìm điểm đầu tiên của chữ
+                        numberRect.top = i;
+                        numberRect.left = j;
+                        numberRect.bottom =i;
+                        numberRect.right =j;
+                        break outterloop;
+                    }
+                }
+            }
+
+            followPath(numberRect,coverImageIntArray1D,cards.getWidth(),cards.getHeight(),numberRect.left,numberRect.top);
+            Bitmap bitmap = Bitmap.createBitmap(cards,numberRect.left,numberRect.top,numberRect.right-numberRect.left,numberRect.bottom-numberRect.top);
+            cardsAfterSplist.add(bitmap);
+        }
+        return cardsAfterSplist;
+    }
+
+
+
+//    private List<Bitmap> splistCards(Bitmap cards) {
+//        List<Bitmap> cardsAfterSplist = new ArrayList<>();
+//        int ratio = cards.getWidth() / cards.getHeight();
+//        if (ratio > 1) {
+//            cardsAfterSplist.add(cards);
+//            List<Rect> colums = new ArrayList<>();
+//            int[] coverImageIntArray1D = new int[cards.getWidth() * cards.getHeight()];
+//            cards.getPixels(coverImageIntArray1D, 0, cards.getWidth(),
+//                    0, 0, cards.getWidth(), cards.getHeight());
+//            Rect colum = new Rect();
+//            colum.left =0;
+//            colum.right=0;
+//            for (int i = 0; i < cards.getHeight(); i++) {
+//                for (int j = 0; j < cards.getWidth(); j++) {
+//                    int pixel = coverImageIntArray1D[j + i * cards.getWidth()];
+//                    if (Color.red(pixel) < 215) { // Tìm điểm đầu tiên của chữ
+//                        if(colum.left==0) {
+//                            colum.top = i;
+//                            colum.left = j;
+//                            colum.bottom = i;
+//                            colum.right = j;
+//                        }
+//                    }else {
+//                        if(colum.right!=0) {
+//                            colum.right = j-1;
+//                            colums.add(colum);
+//                            colum = new Rect();
+//                            colum.left =0;
+//                            colum.right=0;
+//                        }
+//                    }
+//                }
+//                if(colums.size()!=0)
+//                    break;
+//            }
+//
+//            int cardWith=0;
+//            if(colums.size()>0) {
+//                cardWith = colums.get(0).left;
+//                Bitmap bitmap = Bitmap.createBitmap(cards,0, 0, cardWith, cards.getHeight());
+//                Rect numberRect0 = new Rect();
+//                int[] coverImageIntArray1D0 = new int[bitmap.getWidth() * bitmap.getHeight()];
+//                bitmap.getPixels(coverImageIntArray1D0, 0, bitmap.getWidth(),
+//                        0, 0, bitmap.getWidth(), bitmap.getHeight());
+//                outterloop:
+//                for (int k = 0; k < bitmap.getHeight(); k++) {
+//                    for (int j = 0; j < bitmap.getWidth(); j++) {
+//                        int pixel = coverImageIntArray1D0[j + k * bitmap.getWidth()];
+//                        if (Color.red(pixel) < 100) { // Tìm điểm đầu tiên của chữ
+//                            numberRect0.top = k;
+//                            numberRect0.left = j;
+//                            numberRect0.bottom =k;
+//                            numberRect0.right =j;
+//                            break outterloop;
+//                        }
+//                    }
+//                }
+//                followPath(numberRect0,coverImageIntArray1D0,bitmap.getWidth(),bitmap.getHeight(),numberRect0.left,numberRect0.top);
+//                bitmap = Bitmap.createBitmap(bitmap,numberRect0.left,numberRect0.top,numberRect0.right-numberRect0.left,numberRect0.bottom-numberRect0.top);
+//                cardsAfterSplist.add(bitmap);
+//                for (int i = 0; i < colums.size(); i++) {
+//                    bitmap = Bitmap.createBitmap(cards, colums.get(i).right, 0, cardWith, cards.getHeight());
+//
+////                    cardsAfterSplist.add(bitmap);
+//                    Rect numberRect = new Rect();
+//                    int[] coverImageIntArray1D2 = new int[bitmap.getWidth() * bitmap.getHeight()];
+//                    bitmap.getPixels(coverImageIntArray1D2, 0, bitmap.getWidth(),
+//                            0, 0, bitmap.getWidth(), bitmap.getHeight());
+//                    outterloop:
+//                    for (int k = 0; k < bitmap.getHeight(); k++) {
+//                        for (int j = 0; j < bitmap.getWidth(); j++) {
+//                            int pixel = coverImageIntArray1D2[j + k * bitmap.getWidth()];
+//                            if (Color.red(pixel) < 100) { // Tìm điểm đầu tiên của chữ
+//                                numberRect.top = k;
+//                                numberRect.left = j;
+//                                numberRect.bottom =k;
+//                                numberRect.right =j;
+//                                break outterloop;
+//                            }
+//                        }
+//                    }
+//                    followPath(numberRect,coverImageIntArray1D2,bitmap.getWidth(),bitmap.getHeight(),numberRect.left,numberRect.top);
+//                    bitmap = Bitmap.createBitmap(bitmap,numberRect.left,numberRect.top,numberRect.right-numberRect.left,numberRect.bottom-numberRect.top);
+//
+//                    cardsAfterSplist.add(bitmap);
+//                }
+//            }
+//        } else {
+//
+//            cardsAfterSplist.add(cards);
+//            Rect numberRect = new Rect();
+//            int[] coverImageIntArray1D = new int[cards.getWidth() * cards.getHeight()];
+//            cards.getPixels(coverImageIntArray1D, 0, cards.getWidth(),
+//                    0, 0, cards.getWidth(), cards.getHeight());
+//            outterloop:
+//            for (int i = 0; i < cards.getHeight(); i++) {
+//                for (int j = 0; j < cards.getWidth(); j++) {
+//                    int pixel = coverImageIntArray1D[j + i * cards.getWidth()];
+//                    if (Color.red(pixel) < 100) { // Tìm điểm đầu tiên của chữ
+//                        numberRect.top = i;
+//                        numberRect.left = j;
+//                        numberRect.bottom =i;
+//                        numberRect.right =j;
+//                        break outterloop;
+//                    }
+//                }
+//            }
+//
+//            followPath(numberRect,coverImageIntArray1D,cards.getWidth(),cards.getHeight(),numberRect.left,numberRect.top);
+//            Bitmap bitmap = Bitmap.createBitmap(cards,numberRect.left,numberRect.top,numberRect.right-numberRect.left,numberRect.bottom-numberRect.top);
+//            cardsAfterSplist.add(bitmap);
+//        }
+//        return cardsAfterSplist;
+//    }
+    private void followPath(Rect numberRect, int[] coverImageIntArray1D, int width,int height, int j, int i) {
+        if(j<0||i<0||j>width-1||i>height-1||coverImageIntArray1D[j+i*width]==-1)
+            return; // Đã duyệt qua
+        if(Color.red(coverImageIntArray1D[j+i*width])<100) {
+            if (j < numberRect.left)
+                numberRect.left = j;
+            if (j > numberRect.right)
+                numberRect.right = j;
+            if (i < numberRect.top)
+                numberRect.top = i;
+            if (i > numberRect.bottom)
+                numberRect.bottom = i;
+            coverImageIntArray1D[j + i * width] = -1;
+            Log.d("nhatnhat", "splistCards: " + numberRect.top + "/" + numberRect.left + "/" + numberRect.bottom + "/" + numberRect.right);
+            followPath(numberRect, coverImageIntArray1D, width, height, j - 1, i - 1);
+            followPath(numberRect, coverImageIntArray1D, width, height, j - 1, i);
+            followPath(numberRect, coverImageIntArray1D, width, height, j - 1, i + 1);
+            followPath(numberRect, coverImageIntArray1D, width, height, j, i - 1);
+            followPath(numberRect, coverImageIntArray1D, width, height, j, i + 1);
+            followPath(numberRect, coverImageIntArray1D, width, height, j + 1, i - 1);
+            followPath(numberRect, coverImageIntArray1D, width, height, j + 1, i);
+            followPath(numberRect, coverImageIntArray1D, width, height, j + 1, i + 1);
+        }
+
+    }
+
+    public Rect getCardsZoneFromBitmap(Bitmap bitmap,int patternRedColor){
+        int[] coverImageIntArray1D = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(coverImageIntArray1D, 0, bitmap.getWidth(),
+                0, 0, bitmap.getWidth(), bitmap.getHeight());
+        Rect cardsZone = new Rect();
+        cardsZone.left =0;
+        outerloop:
+        for (int i = 0; i < bitmap.getHeight(); i++) {
+            for (int j = 0; j < bitmap.getWidth(); j++) {
+                int pixel = coverImageIntArray1D[j + i * bitmap.getWidth()];
+                if(Color.red(pixel)>patternRedColor){
+                    if(cardsZone.left==0){
+                        cardsZone.left=j;
+                        cardsZone.top =i;
+                        break outerloop;
+                    }
+                }
+            }
+        }
+
+
+        outerloop:
+        for (int i = bitmap.getHeight()-1; i >=0; i--) {
+            for (int j = bitmap.getWidth()-1; j>=0; j--) {
+                int pixel = coverImageIntArray1D[j + i * bitmap.getWidth()];
+                if(Color.red(pixel)>patternRedColor){
+                    cardsZone.right = j;
+                    cardsZone.bottom =i;
+                    break outerloop;
+                }
+            }
+        }
+        return cardsZone;
+
     }
 
     private InputImage getRecongnizerImage(Bitmap baseBitmap) {

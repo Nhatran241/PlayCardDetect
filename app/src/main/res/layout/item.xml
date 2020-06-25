@@ -7,21 +7,6 @@
     <ImageView
         android:layout_centerHorizontal="true"
         android:id="@+id/iv_cardlevel"
-        android:layout_width="50dp"
-        android:layout_height="50dp"/>
-    <ImageView
-        android:layout_below="@id/iv_cardlevel"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/iv_cardsuit"
-        android:layout_width="50dp"
-        android:layout_height="50dp"/>
-    <TextView
-        android:textColor="#FFFFFF"
-        android:text="ádas"
-        android:textSize="20sp"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/iv_cardsuit"
-        android:id="@+id/tv_card"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_width="400dp"
+        android:layout_height="400dp"/>
 </RelativeLayout>

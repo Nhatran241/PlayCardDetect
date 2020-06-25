@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
@@ -31,8 +32,8 @@ import com.google.mlkit.vision.objects.ObjectDetector;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
+import com.machinelearning.playcarddetect.data.BitmapsAdapter;
 import com.machinelearning.playcarddetect.data.card.Card;
-import com.machinelearning.playcarddetect.data.MyAdapter;
 import com.machinelearning.playcarddetect.data.card.Suit;
 import com.machinelearning.playcarddetect.process.GetCardDataManager;
 
@@ -140,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
             }
 
         }
+        params.gravity = Gravity.RIGHT|Gravity.TOP;
         mWindowManager.addView(overlayIcon, params);
         mWindowManager.addView(imageoverlay, params_rect);
         imageoverlay.setVisibility(View.GONE);
@@ -210,22 +212,42 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 
     @Override
     public void onBitmapReady(final Bitmap bitmap) {
-        GetCardDataManager.getInstance().getCardDataFromBitmap(bitmap, new GetCardDataManager.GetCardDataFromBitmapListener() {
-            @Override
-            public void onGetDataCompleted(List<Card> cards) {
-                if(cards.size()!=0) {
-                    MyAdapter adapter = new MyAdapter(cards);
+        Rect handCardsZone = new Rect();
+        handCardsZone.top = 250;
+        handCardsZone.left= 160;
+        handCardsZone.right=600;
+        handCardsZone.bottom = 360;
+
+        Rect currentCardsTableZone = new Rect();
+        currentCardsTableZone.top = 100;
+        currentCardsTableZone.left= 130;
+        currentCardsTableZone.right=580;
+        currentCardsTableZone.bottom = 220;
+
+        List<Bitmap> list = new ArrayList<>();
+        long start = System.currentTimeMillis();
+        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,handCardsZone,230,200));
+        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,currentCardsTableZone,220,200));
+        Log.d(TAG, "time: "+(System.currentTimeMillis()-start));
+        BitmapsAdapter adapter = new BitmapsAdapter(list);
                     recyclerView.setAdapter(adapter);
                     imageoverlay.setVisibility(View.VISIBLE);
-                }
-
-            }
-
-            @Override
-            public void onGetDataFailed(String error) {
-
-            }
-        });
+//        GetCardDataManager.getInstance().getCardDataFromBitmap(bitmap, new GetCardDataManager.GetCardDataFromBitmapListener() {
+//            @Override
+//            public void onGetDataCompleted(List<Card> cards) {
+//                if(cards.size()!=0) {
+//                    MyAdapter adapter = new MyAdapter(cards);
+//                    recyclerView.setAdapter(adapter);
+//                    imageoverlay.setVisibility(View.VISIBLE);
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onGetDataFailed(String error) {
+//
+//            }
+//        });
 
     }
 
