@@ -14,6 +14,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Gravity;
@@ -37,6 +38,7 @@ import com.machinelearning.playcarddetect.data.card.Card;
 import com.machinelearning.playcarddetect.data.card.Suit;
 import com.machinelearning.playcarddetect.process.GetCardDataManager;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -227,27 +229,27 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
         List<Bitmap> list = new ArrayList<>();
         long start = System.currentTimeMillis();
         list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,handCardsZone,240,200));
-        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,currentCardsTableZone,240,200));
+//        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "Auto";;
+//        for (int i = 0; i <list.size() ; i++) {
+//            try {
+//                SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this,list.get(i),"Card"+i,path,"PNG");
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        list.clear();
+        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,currentCardsTableZone,220,200));
+//        for (int i = 0; i <list.size() ; i++) {
+//            try {
+//                SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this,list.get(i),"Card"+i+"Suit",path,"PNG");
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
         Log.d(TAG, "time: "+(System.currentTimeMillis()-start));
         BitmapsAdapter adapter = new BitmapsAdapter(list);
                     recyclerView.setAdapter(adapter);
                     imageoverlay.setVisibility(View.VISIBLE);
-//        GetCardDataManager.getInstance().getCardDataFromBitmap(bitmap, new GetCardDataManager.GetCardDataFromBitmapListener() {
-//            @Override
-//            public void onGetDataCompleted(List<Card> cards) {
-//                if(cards.size()!=0) {
-//                    MyAdapter adapter = new MyAdapter(cards);
-//                    recyclerView.setAdapter(adapter);
-//                    imageoverlay.setVisibility(View.VISIBLE);
-//                }
-//
-//            }
-//
-//            @Override
-//            public void onGetDataFailed(String error) {
-//
-//            }
-//        });
 
     }
 
