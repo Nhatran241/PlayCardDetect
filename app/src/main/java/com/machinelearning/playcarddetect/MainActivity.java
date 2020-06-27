@@ -226,8 +226,8 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 
         List<Bitmap> list = new ArrayList<>();
         long start = System.currentTimeMillis();
-//        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,handCardsZone,230,200));
-        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,currentCardsTableZone,200,200));
+        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,handCardsZone,240,200));
+        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,currentCardsTableZone,240,200));
         Log.d(TAG, "time: "+(System.currentTimeMillis()-start));
         BitmapsAdapter adapter = new BitmapsAdapter(list);
                     recyclerView.setAdapter(adapter);
