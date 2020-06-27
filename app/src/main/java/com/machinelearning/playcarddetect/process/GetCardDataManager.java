@@ -119,13 +119,13 @@ public class GetCardDataManager {
         if(cardsZone.right-cardsZone.left>0&&cardsZone.bottom-cardsZone.top>0){
             Bitmap cards =Bitmap.createBitmap(smallBitmap,cardsZone.left,cardsZone.top,cardsZone.right-cardsZone.left,cardsZone.bottom-cardsZone.top);
             bitmaps.addAll(splistCards(cards,patternColum));
-            if(bitmaps.size()>0){
-                int y = bitmaps.get(1).getHeight();
-                Log.d("nhatnhatasdasd", "getCardsZoneBitmap: "+cardsZone.top +"/"+y+"/"+cardsZone.bottom);
-                Bitmap suits =Bitmap.createBitmap(smallBitmap,cardsZone.left,cardsZone.top+y+7,cardsZone.right-cardsZone.left,y);
-                bitmaps.addAll(splistCards(suits,patternColum));
-            }
-
+//            if(bitmaps.size()>0){
+//                int y = bitmaps.get(0).getHeight();
+//                Log.d("nhatnhatasdasd", "getCardsZoneBitmap: "+cardsZone.top +"/"+y+"/"+cardsZone.bottom);
+//                Bitmap suits =Bitmap.createBitmap(smallBitmap,cardsZone.left-5,cardsZone.top+y+7,cardsZone.right-cardsZone.left,y);
+//                bitmaps.addAll(splistCards(suits,patternColum));
+//            }
+//
 
         }
         return bitmaps;
@@ -147,8 +147,10 @@ public class GetCardDataManager {
             colum.right=0;
             outterloop:
             for (int i = 0; i < cards.getHeight(); i++) {
+                String row ="";
                 for (int j = 0; j < cards.getWidth(); j++) {
                     int pixel = coverImageIntArray1D[j + i * cards.getWidth()];
+                    row+=Color.red(pixel)+" : ";
                     if (Color.red(pixel) < patternColum) { // Tìm điểm đầu tiên của chữ
                         if(colum.left==0) {
                             colum.top = i;
@@ -165,16 +167,21 @@ public class GetCardDataManager {
                             colum.right=0;
                         }
                     }
+
                 }
+
+                Log.d("nhathat", "splistCards: "+row);
                 if(colums.size()!=0)
                     break outterloop;
             }
 
+            for (Rect rect:colums
+                 ) {
+                Log.d("nhatnhat", "splistCards: "+cards.getWidth());
+                Log.d("nhatnhat", "splistCards: "+rect.left+" :" +rect.right);
+
+            }
             int cardWith=0;
-            try {
-
-
-                Log.d("nhatnahtatat", "splistCards: "+colums.size());
                 if(colums.size()>0) {
                     cardWith = colums.get(0).left;
                     Bitmap bitmap = Bitmap.createBitmap(cards,0, 0, cardWith, cards.getHeight());
@@ -195,6 +202,7 @@ public class GetCardDataManager {
                             }
                         }
                     }
+                    Log.d("nhatnhat", "splistCards: "+colums.size()+" "+numberRect0.left+"/"+numberRect0.right);
                     followPath(numberRect0,coverImageIntArray1D0,bitmap.getWidth(),bitmap.getHeight(),numberRect0.left,numberRect0.top);
                     bitmap = Bitmap.createBitmap(bitmap,numberRect0.left,numberRect0.top,numberRect0.right-numberRect0.left,numberRect0.bottom-numberRect0.top);
                     cardsAfterSplist.add(bitmap);
@@ -220,12 +228,30 @@ public class GetCardDataManager {
                             }
                         }
                         followPath(numberRect,coverImageIntArray1D2,bitmap.getWidth(),bitmap.getHeight(),numberRect.left,numberRect.top);
-                        bitmap = Bitmap.createBitmap(bitmap,numberRect.left,numberRect.top,numberRect.right-numberRect.left,numberRect.bottom-numberRect.top);
+                        Bitmap levelBitmap = Bitmap.createBitmap(bitmap,numberRect.left,numberRect.top,numberRect.right-numberRect.left,numberRect.bottom-numberRect.top);
 
-                        cardsAfterSplist.add(bitmap);
+                        cardsAfterSplist.add(levelBitmap);
+//
+//                        numberRect = new Rect();
+//                        outterloop:
+//                        for (int o = 0; i < cards.getHeight(); i++) {
+//                            for (int j = 0; j < cards.getWidth(); j++) {
+//                                int pixel = coverImageIntArray1D[j + o * cards.getWidth()];
+//                                if (Color.red(pixel) < 100&&Color.red(pixel)!=-1) { // Tìm điểm đầu tiên của chữ
+//                                    numberRect.top = o;
+//                                    numberRect.left = j;
+//                                    numberRect.bottom =o;
+//                                    numberRect.right =j;
+//                                    break outterloop;
+//                                }
+//                            }
+//                        }
+//
+//                        followPath(numberRect,coverImageIntArray1D,bitmap.getWidth(),bitmap.getHeight(),numberRect.left,numberRect.top);
+//                        Bitmap bitmapSuits = Bitmap.createBitmap(bitmap,numberRect.left,numberRect.top,numberRect.right-numberRect.left,numberRect.bottom-numberRect.top);
+//                        cardsAfterSplist.add(bitmapSuits);
                     }
                 }
-            }catch (Exception e){};
         } else {
 
             cardsAfterSplist.add(cards);
@@ -250,6 +276,24 @@ public class GetCardDataManager {
             followPath(numberRect,coverImageIntArray1D,cards.getWidth(),cards.getHeight(),numberRect.left,numberRect.top);
             Bitmap bitmap = Bitmap.createBitmap(cards,numberRect.left,numberRect.top,numberRect.right-numberRect.left,numberRect.bottom-numberRect.top);
             cardsAfterSplist.add(bitmap);
+            numberRect= new Rect();
+            outterloop:
+            for (int i = 0; i < cards.getHeight(); i++) {
+                for (int j = 0; j < cards.getWidth(); j++) {
+                    int pixel = coverImageIntArray1D[j + i * cards.getWidth()];
+                    if (Color.red(pixel) < 100&&Color.red(pixel)!=-1) { // Tìm điểm đầu tiên của chữ
+                        numberRect.top = i;
+                        numberRect.left = j;
+                        numberRect.bottom =i;
+                        numberRect.right =j;
+                        break outterloop;
+                    }
+                }
+            }
+
+            followPath(numberRect,coverImageIntArray1D,cards.getWidth(),cards.getHeight(),numberRect.left,numberRect.top);
+            Bitmap bitmapSuits = Bitmap.createBitmap(cards,numberRect.left,numberRect.top,numberRect.right-numberRect.left,numberRect.bottom-numberRect.top);
+            cardsAfterSplist.add(bitmapSuits);
         }
         return cardsAfterSplist;
     }
