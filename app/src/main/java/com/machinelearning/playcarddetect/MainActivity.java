@@ -45,6 +45,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements CaptureManager.onBitmapListener {
+    private static final int OVERLAY = 1234;
     /**
      * Define
      */
@@ -81,13 +82,61 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
         setContentView(R.layout.activity_main);
         initExtractText();
         initPlayerData();
-        requestCapture();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Show alert dialog to the user saying a separate permission is needed
-            // Launch the settings activity if the user prefers
-            Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-            startActivity(myIntent);
+            if (!Settings.canDrawOverlays(this)) {
+                Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                startActivityForResult(myIntent,OVERLAY);
+            }else {
+
+                requestCapture();
+            }
         }
+
+    }
+
+    private void initExtractText() {
+        recognizer = TextRecognition.getClient();
+    }
+
+
+    private void initPlayerData() {
+        playercards = new ArrayList<>();
+        suits = new ArrayList<>();
+    }
+
+
+    private void initTimer() {
+
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+
+            @Override
+            public void run() {
+                captureManager.takeScreenshot();
+            }
+
+        }, 0, 4000);//Update text every second
+
+    }
+
+
+    private void requestCapture() {
+        captureManager = new CaptureManager();
+        captureManager.requestScreenshotPermission(this, REQUESTCAPTURE);
+        captureManager.setOnGrantedPermissionListener(new CaptureManager.onGrantedPermissionListener() {
+            @Override
+            public void onResult(boolean isGranted) {
+                if (isGranted) {
+                    chatHeadView();
+//                    initTimer();
+                } else {
+                    captureManager.requestScreenshotPermission(MainActivity.this, REQUESTCAPTURE);
+                }
+            }
+        });
+    }
+
+    private void chatHeadView() {
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         overlayIcon = LayoutInflater.from(this).inflate(R.layout.bubble_layout, null);
         imageoverlay = LayoutInflater.from(this).inflate(R.layout.imageoverlay, null);
@@ -144,8 +193,6 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 
         }
         params.gravity = Gravity.RIGHT|Gravity.TOP;
-        mWindowManager.addView(overlayIcon, params);
-        mWindowManager.addView(imageoverlay, params_rect);
         imageoverlay.setVisibility(View.GONE);
         overlayIcon.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -153,63 +200,32 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
                 captureManager.takeScreenshot();
             }
         });
-    }
-
-    private void initExtractText() {
-        recognizer = TextRecognition.getClient();
-    }
-
-
-    private void initPlayerData() {
-        playercards = new ArrayList<>();
-        suits = new ArrayList<>();
-    }
-
-
-    private void initTimer() {
-
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-
-            @Override
-            public void run() {
-                captureManager.takeScreenshot();
-            }
-
-        }, 0, 4000);//Update text every second
-
-    }
-
-
-    private void requestCapture() {
-        captureManager = new CaptureManager();
-        captureManager.requestScreenshotPermission(this, REQUESTCAPTURE);
-        captureManager.setOnGrantedPermissionListener(new CaptureManager.onGrantedPermissionListener() {
-            @Override
-            public void onResult(boolean isGranted) {
-                if (isGranted) {
-                    captureManager.init(MainActivity.this);
-//                    initTimer();
-                } else {
-                    captureManager.requestScreenshotPermission(MainActivity.this, REQUESTCAPTURE);
-                }
-            }
-        });
+        captureManager.init(MainActivity.this);
+        mWindowManager.addView(overlayIcon, params);
+        mWindowManager.addView(imageoverlay, params_rect);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        captureManager.onActivityResult(resultCode, data);
-        if (requestCode == 101 && resultCode == RESULT_OK) {
-            mWindowManager.addView(overlayIcon, params);
-            overlayIcon.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    captureManager.takeScreenshot();
-                }
-            });
+        if(requestCode==OVERLAY){
+            if (Settings.canDrawOverlays(this)) {
+                requestCapture();
+            }
         }
+        if(requestCode==REQUESTCAPTURE){
+            captureManager.onActivityResult(resultCode, data);
+        }
+
+//        if (requestCode == 101 && resultCode == RESULT_OK) {
+//            mWindowManager.addView(overlayIcon, params);
+//            overlayIcon.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    captureManager.takeScreenshot();
+//                }
+//            });
+//        }
     }
 
     @Override

@@ -238,7 +238,7 @@ public class GetCardDataManager {
 //                cardsAfterSplist.add(bitmap);
 //            }
             for (int i = 0; i < colums.size(); i++) {
-                if(colums.get(i).right>0){
+                if(width>0){
                     Bitmap cardBitmap = Bitmap.createBitmap(cards, colums.get(i).right, 0, width, cards.getHeight());
                     /**
                      * Cắt từng number ra khỏi từng card
@@ -255,9 +255,11 @@ public class GetCardDataManager {
                         int startY =numberRect.bottom+3;
                         int height =numberRect.bottom-numberRect.top;
 
-                            Bitmap suitBitmap = Bitmap.createBitmap(cards, colums.get(i).right,startY , width-2,height );
+                        if(startY+height<=cards.getHeight()) {
+                            Bitmap suitBitmap = Bitmap.createBitmap(cards, colums.get(i).right, startY, width - 2, height);
                             cardsAfterSplist.add(suitBitmap);
                             cardsAfterSplist.add(splistSmallestMatchImage(suitBitmap));
+                        }
                     }
 
                 }
