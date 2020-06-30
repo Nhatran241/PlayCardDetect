@@ -4,16 +4,27 @@ import android.graphics.Bitmap;
 import android.graphics.Rect;
 
 public class Suit {
-    private Bitmap suitImage;
-    private Rect suitRect;
     private SuitType suitType;
+    private int[] pixels;
+    private int width;
+    private int height;
+    private Bitmap bitmap ;
 
-    public Bitmap getSuitImage() {
-        return suitImage;
+
+    public Bitmap getBitmap() {
+        return bitmap;
     }
 
-    public void setSuitImage(Bitmap suitImage) {
-        this.suitImage = suitImage;
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    public Suit( SuitType suitType, int[] pixels, int width, int height, Bitmap bitmap) {
+        this.suitType = suitType;
+        this.pixels = pixels;
+        this.width = width;
+        this.height = height;
+        this.bitmap = bitmap;
     }
 
     public enum SuitType {
@@ -24,19 +35,30 @@ public class Suit {
         NotDetect
     }
 
-    public Suit(Bitmap suitImage, Rect suitRect, SuitType suitType) {
-        this.suitImage = suitImage;
-        this.suitRect = suitRect;
-        this.suitType = suitType;
+    public int[] getPixels() {
+        return pixels;
     }
 
-    public Rect getSuitRect() {
-        return suitRect;
+    public void setPixels(int[] pixels) {
+        this.pixels = pixels;
     }
 
-    public void setSuitRect(Rect suitRect) {
-        this.suitRect = suitRect;
+    public int getWidth() {
+        return width;
     }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
 
     public SuitType getSuitType() {
         return suitType;

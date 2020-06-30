@@ -51,7 +51,9 @@ public class BitmapsAdapter extends RecyclerView.Adapter<BitmapsAdapter.MyViewHo
     public void onBindViewHolder(MyViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        holder.imagelevel.setImageBitmap(mDataset.get(position));
+        if(mDataset.get(position)!=null) {
+            holder.imagelevel.setImageBitmap(mDataset.get(position));
+        }
 //        holder.imagelevel.setImageBitmap(mDataset.get(position).getCardLevel().getCardLevelBitmap());
 //        holder.cardname.setText(mDataset.get(position).getCardLevel().getCardLevel()+" : "+mDataset.get(position).getCardsuit().getSuitType().name());
 

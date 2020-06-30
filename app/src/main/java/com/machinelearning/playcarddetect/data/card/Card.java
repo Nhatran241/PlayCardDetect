@@ -13,7 +13,8 @@ public class Card {
         this.cardsuit = cardsuit;
         this.cardRect = cardRect;
     }
-
+    public Card() {
+    }
     public Rect getCardRect() {
         return cardRect;
     }

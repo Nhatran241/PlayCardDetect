@@ -5,20 +5,58 @@ import android.graphics.Rect;
 
 public class Level {
     private String cardLevel;
-    private Rect cardLevelRect;
-    private Bitmap cardLevelBitmap;
+    private int[] pixels;
+    private int width;
+    private int height;
+    private Bitmap bitmap;
 
-    public Bitmap getCardLevelBitmap() {
-        return cardLevelBitmap;
+    public int[] getPixels() {
+        return pixels;
     }
 
-    public void setCardLevelBitmap(Bitmap cardLevelBitmap) {
-        this.cardLevelBitmap = cardLevelBitmap;
+    public void setPixels(int[] pixels) {
+        this.pixels = pixels;
     }
 
-    public Level(String cardLevel, Rect cardLevelRect) {
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    public Level(String cardLevel, int[] pixels, int width, int height, Bitmap bitmap) {
         this.cardLevel = cardLevel;
-        this.cardLevelRect = cardLevelRect;
+        this.pixels = pixels;
+        this.width = width;
+        this.height = height;
+        this.bitmap = bitmap;
+    }
+
+
+    public int[] getPixel() {
+        return pixels;
+    }
+
+    public void setPixel(int[] pixels) {
+        this.pixels = pixels;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     public String getCardLevel() {
@@ -29,11 +67,4 @@ public class Level {
         this.cardLevel = cardLevel;
     }
 
-    public Rect getCardLevelRect() {
-        return cardLevelRect;
-    }
-
-    public void setCardLevelRect(Rect cardLevelRect) {
-        this.cardLevelRect = cardLevelRect;
-    }
 }

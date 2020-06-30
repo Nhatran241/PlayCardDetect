@@ -3,6 +3,7 @@ package com.machinelearning.playcarddetect;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -27,6 +28,7 @@ import android.widget.RelativeLayout;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.common.collect.BiMap;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.objects.ObjectDetector;
@@ -35,6 +37,7 @@ import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.machinelearning.playcarddetect.data.BitmapsAdapter;
 import com.machinelearning.playcarddetect.data.card.Card;
+import com.machinelearning.playcarddetect.data.card.Level;
 import com.machinelearning.playcarddetect.data.card.Suit;
 import com.machinelearning.playcarddetect.process.GetCardDataManager;
 
@@ -148,8 +151,7 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
             }
         });
         recyclerView = imageoverlay.findViewById(R.id.rv_images);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 5));
         overlayIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -178,14 +180,14 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 params_rect = new WindowManager.LayoutParams(
                         WindowManager.LayoutParams.MATCH_PARENT,
-                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.MATCH_PARENT,
                         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                         PixelFormat.TRANSLUCENT);
             } else {
                 params_rect = new WindowManager.LayoutParams(
                         WindowManager.LayoutParams.MATCH_PARENT,
-                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.MATCH_PARENT,
                         WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                         PixelFormat.TRANSLUCENT);
@@ -231,39 +233,46 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
     @Override
     public void onBitmapReady(final Bitmap bitmap) {
         Rect handCardsZone = new Rect();
-        handCardsZone.top = 250;
-        handCardsZone.left= 160;
-        handCardsZone.right=600;
-        handCardsZone.bottom = 360;
+        handCardsZone.top = 300;
+        handCardsZone.left= 190;
+        handCardsZone.right=550;
+        handCardsZone.bottom = 480;
 
         Rect currentCardsTableZone = new Rect();
-        currentCardsTableZone.top = 100;
-        currentCardsTableZone.left= 130;
+        currentCardsTableZone.top = 170;
+        currentCardsTableZone.left= 150;
         currentCardsTableZone.right=580;
-        currentCardsTableZone.bottom = 220;
+        currentCardsTableZone.bottom = 270;
 
-        List<Bitmap> list = new ArrayList<>();
+        List<Card> list = new ArrayList<>();
         long start = System.currentTimeMillis();
-        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,handCardsZone,240,200));
-//        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "Auto";;
-//        for (int i = 0; i <list.size() ; i++) {
-//            try {
-//                SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this,list.get(i),"Card"+i,path,"PNG");
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        list.clear();
-        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,currentCardsTableZone,220,200));
-//        for (int i = 0; i <list.size() ; i++) {
-//            try {
-//                SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this,list.get(i),"Card"+i+"Suit",path,"PNG");
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
+//        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,handCardsZone,240,150));
+        list.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,currentCardsTableZone,220,230));
+
+        List<Bitmap> bitmaps = new ArrayList<>();
+        bitmaps.add(bitmap);
+        for (int i = 0; i <list.size() ; i++) {
+            // Create bitmap
+            if(list.get(i).getCardLevel()!=null) {
+                bitmaps.add(list.get(i).getCardLevel().getBitmap());
+            }
+            if(list.get(i).getCardsuit()!=null) {
+                bitmaps.add(list.get(i).getCardsuit().getBitmap());
+            }
+//            Level level = list.get(i).getCardLevel();
+//            Bitmap blevel = Bitmap.createBitmap(level.getWidth(), level.getHeight(), Bitmap.Config.ARGB_8888);
+//            bitmap.setPixels(level.getPixel(), 0, level.getWidth(), 0, 0, level.getWidth(), level.getHeight());
+//            bitmaps.add(blevel);
+//
+//            Suit suit = list.get(i).getCardsuit();
+//            Bitmap bsuit = Bitmap.createBitmap(suit.getWidth(), suit.getHeight(), Bitmap.Config.ARGB_8888);
+//            bitmap.setPixels(suit.getPixels(), 0, suit.getWidth(), 0, 0, suit.getWidth(), suit.getHeight());
+//            bitmaps.add(bsuit);
+        }
+
+        Log.d(TAG, "onBitmapReady: "+list.size()+"/"+bitmaps.size());
         Log.d(TAG, "time: "+(System.currentTimeMillis()-start));
-        BitmapsAdapter adapter = new BitmapsAdapter(list);
+        BitmapsAdapter adapter = new BitmapsAdapter(bitmaps);
                     recyclerView.setAdapter(adapter);
                     imageoverlay.setVisibility(View.VISIBLE);
 

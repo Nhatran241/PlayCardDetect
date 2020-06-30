@@ -7,6 +7,6 @@
     <ImageView
         android:layout_centerHorizontal="true"
         android:id="@+id/iv_cardlevel"
-        android:layout_width="400dp"
-        android:layout_height="400dp"/>
+        android:layout_width="50dp"
+        android:layout_height="50dp"/>
 </RelativeLayout>
