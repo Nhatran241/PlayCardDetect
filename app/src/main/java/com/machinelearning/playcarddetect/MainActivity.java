@@ -213,6 +213,10 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
         if(requestCode==OVERLAY){
             if (Settings.canDrawOverlays(this)) {
                 requestCapture();
+            }else {
+
+                Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                startActivityForResult(myIntent,OVERLAY);
             }
         }
         if(requestCode==REQUESTCAPTURE){
