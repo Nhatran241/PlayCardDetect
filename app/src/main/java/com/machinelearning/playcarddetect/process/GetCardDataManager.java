@@ -202,7 +202,7 @@ public class GetCardDataManager {
             // Lá bài có độ rộng lớn hơn 10
             if(rect.right-rect.left>10 && rect.bottom-rect.top>0) {
                     Bitmap bitmap = Bitmap.createBitmap(baseBitmap, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
-                    List<Rect> numberAndSuit = getRectsMathPattern(bitmap,200,true);
+                    List<Rect> numberAndSuit = getRectsMathPattern(bitmap,100,true);
 
 
 
@@ -215,30 +215,29 @@ public class GetCardDataManager {
                         Rect rect1 = numberAndSuit.get(i);
                         if (rect1.right - rect1.left > 5 && rect1.bottom - rect1.top > 0) {
                             Bitmap bitmap2 = Bitmap.createBitmap(bitmap, rect1.left, rect1.top, rect1.right - rect1.left, rect1.bottom - rect1.top);
-                            if(i!=0){
+
                                 int[] pixels = new int[bitmap2.getWidth() * bitmap2.getHeight()];
                                 bitmap2.getPixels(pixels, 0, bitmap2.getWidth(),
                                         0, 0, bitmap2.getWidth(), bitmap2.getHeight());
-                                if(checkSuit(pixels,200,true,bitmap2.getWidth(),bitmap2.getHeight())!=Suit.SuitType.NotDetect){
-                                   isCard=true;
+//                                if(checkSuit(pixels,100,true,bitmap2.getWidth(),bitmap2.getHeight())!=Suit.SuitType.NotDetect){
+//                                   isCard=true;
                                     Card card2 = new Card();
                                     Level level2 = new Level("null", null, bitmap2.getWidth(), bitmap2.getHeight(), bitmap2);
                                     card2.setCardLevel(level2);
                                     cardsInZone.add(card2);
-                                    Log.d("nhatnhat", ": "+checkSuit(pixels,200,true,bitmap2.getWidth(),bitmap2.getHeight()));
+                                    Log.d("nhatnhat", ": "+checkSuit(pixels,100,true,bitmap2.getWidth(),bitmap2.getHeight()));
 
-                                    break outsideloop;
-                                 }
-                            }
+//                                    break outsideloop;
+//                                 }
                         }
                     }
                 }
-                if(isCard){
+//                if(isCard){
                     Card card = new Card();
                     Level level = new Level("null", null, bitmap.getWidth(), bitmap.getHeight(), bitmap);
                     card.setCardLevel(level);
                     cardsInZone.add(card);
-                }
+//                }
 
             }
         }
