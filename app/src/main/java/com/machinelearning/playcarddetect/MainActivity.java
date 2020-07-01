@@ -255,6 +255,8 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 
         List<Bitmap> bitmaps = new ArrayList<>();
         bitmaps.add(bitmap);
+
+        String path =Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "playingcard";
         for (int i = 0; i <list.size() ; i++) {
             // Create bitmap
             if(list.get(i).getCardLevel()!=null) {
@@ -274,6 +276,40 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
 //            bitmaps.add(bsuit);
         }
 
+        for (int i = 0; i <bitmaps.size() ; i++) {
+            int[] pixels = new int[bitmaps.get(i).getWidth() * bitmaps.get(i).getHeight()];
+            bitmaps.get(i).getPixels(pixels, 0, bitmaps.get(i).getWidth(),
+                    0, 0, bitmaps.get(i).getWidth(), bitmaps.get(i).getHeight());
+//                                if(checkSuit(pixels,200,true,bitmap2.getWidth(),bitmap2.getHeight())!=Suit.SuitType.NotDetect){
+//                                   isCard=true;
+//                                    Card card2 = new Card();
+//                                    Level level2 = new Level("null", null, bitmap2.getWidth(), bitmap2.getHeight(), bitmap2);
+//                                    card2.setCardLevel(level2);
+//                                    cardsInZone.add(card2);
+//                                    Log.d("nhatnhat", ": "+checkSuit(pixels,200,true,bitmap2.getWidth(),bitmap2.getHeight()));
+//
+//                                    break outsideloop;
+//                                 }
+            for (int l = 0; l <bitmaps.get(i).getHeight();l++) {
+                for (int j = 0; j < bitmaps.get(i).getWidth(); j++) {
+                    int pixel = pixels[j + l * bitmaps.get(i).getWidth()];
+                    if(Color.red(pixel)<100){
+                        pixels[j + l * bitmaps.get(i).getWidth()] = Color.rgb(0,0,0);
+                    }else {
+                        pixels[j + l * bitmaps.get(i).getWidth()] = Color.argb(0,255,255,255);
+                    }
+                }
+            }
+
+            bitmaps.get(i).setPixels(pixels, 0,   bitmaps.get(i).getWidth(), 0, 0,   bitmaps.get(i).getWidth(),   bitmaps.get(i).getHeight());
+//            Bitmap scale =Bitmap.createScaledBitmap(bitmaps.get(i),50,50,false);
+//            bitmap.setPixels(pixels, 0, bitmaps.get(i).getWidth(), 0, 0, bitmaps.get(i).getWidth(), bitmaps.get(i).getHeight());
+            try {
+                SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this, bitmaps.get(i),System.currentTimeMillis()+"",path,"PNG");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         Log.d(TAG, "onBitmapReady: "+list.size()+"/"+bitmaps.size());
         Log.d(TAG, "time: "+(System.currentTimeMillis()-start));
         BitmapsAdapter adapter = new BitmapsAdapter(bitmaps);
