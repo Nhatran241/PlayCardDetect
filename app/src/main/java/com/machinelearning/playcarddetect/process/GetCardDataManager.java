@@ -202,7 +202,7 @@ public class GetCardDataManager {
                 if(numberAndSuit.size()>0) {
                     for (int i = 0; i <numberAndSuit.size() ; i++) {
                         Rect rect1 = numberAndSuit.get(i);
-                        if (rect1.right - rect1.left > 5 && rect1.bottom - rect1.top > 0) {
+                        if (rect1.right - rect1.left > 0 && rect1.bottom - rect1.top > 0) {
                             Bitmap bitmap2 = Bitmap.createBitmap(bitmap, rect1.left, rect1.top, rect1.right - rect1.left, rect1.bottom - rect1.top);
                             if(i==0){
                                 int[] pixels = new int[bitmap2.getWidth() * bitmap2.getHeight()];
@@ -251,6 +251,7 @@ public class GetCardDataManager {
     private String checkNumber(int[] pixels, int patternColor, boolean lessThan, int width, int height) {
         List<int[]> listMatch = new ArrayList<>();
         List<int[]> listMatchInRow = new ArrayList<>();
+
         int maxMatchInRowCount =0;
         boolean canBe_K_A=false;
         boolean canBe_K=false;
@@ -322,16 +323,34 @@ public class GetCardDataManager {
             listMatchInRow.clear();
         }
         if(listMatch.get(0)[1]-listMatch.get(0)[0]>=width/3){
-            //Can be 3_5_6_7_8_J
+            //Can be 3_5_6_7_8_9_J
             canBe_3_5_7=true;
             List<int[]> listMatchInFirstColum = new ArrayList<>();
             List<int[]> listMatchInLastColum = new ArrayList<>();
+            List<int[]> listMatchInMinLeftColum = new ArrayList<>();
+            List<int[]> listMatchInMaxColum = new ArrayList<>();
             int[] matchInFirstColum = new int[2];
             matchInFirstColum[0]=-1;
             matchInFirstColum[1]=-1;
             int[] matchInLastColum = new int[2];
             matchInLastColum[0]=-1;
             matchInLastColum[1]=-1;
+            int[] matchInMinLeftColum = new int[2];
+            matchInMinLeftColum[0]=-1;
+            matchInMinLeftColum[1]=-1;
+            int[] matchInMaxColum = new int[2];
+            matchInMaxColum[0]=-1;
+            matchInMaxColum[1]=-1;
+
+            int minLeft=1000;
+            int max =-1;
+            for (int i = 0; i <listMatch.size() ; i++) {
+                if(listMatch.get(i)[0]< minLeft)
+                    minLeft =listMatch.get(i)[0];
+                if(listMatch.get(i)[1]> max)
+                    max =listMatch.get(i)[1];
+            }
+
             for (int i = 0; i <height; i++) {
                 int pixelFirstColum = pixels[listMatch.get(0)[0] + i * width];
                     if (Color.red(pixelFirstColum) < patternColor) {
@@ -371,6 +390,44 @@ public class GetCardDataManager {
                         matchInLastColum[1] = -1;
                     }
                 }
+                int pixelMinLeftColum = pixels[minLeft + i * width];
+                if (Color.red(pixelMinLeftColum) < patternColor) {
+                    if (matchInMinLeftColum[0] == -1) {
+                        matchInMinLeftColum[0] = i;
+                        matchInMinLeftColum[1] = i;
+                    } else {
+                        matchInMinLeftColum[1] = i;
+                    }
+                    if (i == height - 1) {
+                        listMatchInMinLeftColum.add(matchInMinLeftColum);
+                    }
+                } else {
+                    if (matchInMinLeftColum[0] != -1) {
+                        listMatchInMinLeftColum.add(matchInMinLeftColum);
+                        matchInMinLeftColum = new int[2];
+                        matchInMinLeftColum[0] = -1;
+                        matchInMinLeftColum[1] = -1;
+                    }
+                }
+                int pixelMaxColum = pixels[max + i * width];
+                if (Color.red(pixelMaxColum) < patternColor) {
+                    if (matchInMaxColum[0] == -1) {
+                        matchInMaxColum[0] = i;
+                        matchInMaxColum[1] = i;
+                    } else {
+                        matchInMaxColum[1] = i;
+                    }
+                    if (i == height - 1) {
+                        listMatchInMaxColum.add(matchInMaxColum);
+                    }
+                } else {
+                    if (matchInMaxColum[0] != -1) {
+                        listMatchInMaxColum.add(matchInMaxColum);
+                        matchInMaxColum = new int[2];
+                        matchInMaxColum[0] = -1;
+                        matchInMaxColum[1] = -1;
+                    }
+                }
             }
             if(listMatchInFirstColum.size()==2){
                 if((listMatchInFirstColum.get(listMatchInFirstColum.size()-1)[1]-listMatchInFirstColum.get(listMatchInFirstColum.size()-1)[0])+
@@ -378,25 +435,59 @@ public class GetCardDataManager {
                     return "5";
                 }else {
                     if(listMatchInLastColum.size()>1){
-                        return "3";
+                            return "3";
                     }else {
                         return "J";
                     }
                 }
             }else if(listMatchInFirstColum.size()==1){
+                if(listMatch.size()==height){
+                    return "10";
+                }
                 return "7";
             }else {
+                if(listMatchInMinLeftColum.size()==1){
+                    if(listMatchInMinLeftColum.get(0)[1]-listMatchInMinLeftColum.get(0)[0]+1>height/2&&listMatchInMaxColum.size()==1) {
+                        return "6";
+                    }if(listMatchInMaxColum.get(0)[1]-listMatchInMaxColum.get(0)[0]>height/2){
+                        return "9";
+                    }else {
 
+                        return "8";
+                    }
+                }else {
+                    if(listMatchInMaxColum.get(0)[1]-listMatchInMaxColum.get(0)[0]>height/2) {
+                        return "9";
+                    }
+                }
             }
-        }else {
+        }
+        else {
             List<int[]> listMatchInFirstColum = new ArrayList<>();
             List<int[]> listMatchInLastColum = new ArrayList<>();
+            List<int[]> listMatchInMinLeftColum = new ArrayList<>();
+            List<int[]> listMatchInMaxColum = new ArrayList<>();
             int[] matchInFirstColum = new int[2];
             matchInFirstColum[0]=-1;
             matchInFirstColum[1]=-1;
             int[] matchInLastColum = new int[2];
             matchInLastColum[0]=-1;
             matchInLastColum[1]=-1;
+            int[] matchInMaxColum = new int[2];
+            matchInMaxColum[0]=-1;
+            matchInMaxColum[1]=-1;
+            int[] matchInMinLeftColum = new int[2];
+            matchInMinLeftColum[0]=-1;
+            matchInMinLeftColum[1]=-1;
+
+            int minLeft=1000;
+            int max =-1;
+            for (int i = 0; i <listMatch.size() ; i++) {
+                if(listMatch.get(i)[0]< minLeft)
+                    minLeft =listMatch.get(i)[0];
+                if(listMatch.get(i)[1]> max)
+                    max =listMatch.get(i)[1];
+            }
             for (int i = 0; i <height; i++) {
                 int pixelFirstColum = pixels[listMatch.get(0)[0] + i * width];
                 if (Color.red(pixelFirstColum) < patternColor) {
@@ -436,9 +527,54 @@ public class GetCardDataManager {
                         matchInLastColum[1] = -1;
                     }
                 }
+                int pixelMinLeftColum = pixels[minLeft + i * width];
+                if (Color.red(pixelMinLeftColum) < patternColor) {
+                    if (matchInMinLeftColum[0] == -1) {
+                        matchInMinLeftColum[0] = i;
+                        matchInMinLeftColum[1] = i;
+                    } else {
+                        matchInMinLeftColum[1] = i;
+                    }
+                    if (i == height - 1) {
+                        listMatchInMinLeftColum.add(matchInMinLeftColum);
+                    }
+                } else {
+                    if (matchInMinLeftColum[0] != -1) {
+                        listMatchInMinLeftColum.add(matchInMinLeftColum);
+                        matchInMinLeftColum = new int[2];
+                        matchInMinLeftColum[0] = -1;
+                        matchInMinLeftColum[1] = -1;
+                    }
+                }
+                int pixelMaxColum = pixels[max + i * width];
+                if (Color.red(pixelMaxColum) < patternColor) {
+                    if (matchInMaxColum[0] == -1) {
+                        matchInMaxColum[0] = i;
+                        matchInMaxColum[1] = i;
+                    } else {
+                        matchInMaxColum[1] = i;
+                    }
+                    if (i == height - 1) {
+                        listMatchInMaxColum.add(matchInMaxColum);
+                    }
+                } else {
+                    if (matchInMaxColum[0] != -1) {
+                        listMatchInMaxColum.add(matchInMaxColum);
+                        matchInMaxColum = new int[2];
+                        matchInMaxColum[0] = -1;
+                        matchInMaxColum[1] = -1;
+                    }
+                }
+
             }
+
             if(listMatchInFirstColum.size()==1&&listMatchInLastColum.size()==1){
-                return "4";
+                    return "4";
+            }else {
+                Log.d("nhatnhat", "checkNumber: "+listMatchInMinLeftColum.get(0)[1]+"/"+height);
+                if(listMatchInMinLeftColum.get(0)[1]<height-1){
+                    return "Q";
+                }
             }
         }
         if(listMatch.get(listMatch.size()-1)[1]-listMatch.get(listMatch.size()-1)[0]>=maxMatchInRowCount){
