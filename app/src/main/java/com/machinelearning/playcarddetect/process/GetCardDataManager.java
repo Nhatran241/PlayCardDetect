@@ -198,12 +198,10 @@ public class GetCardDataManager {
             // Lá bài có độ rộng lớn hơn 10 và độ cao lớn 10
             if(rect.right-rect.left>=10 && rect.bottom-rect.top>10) {
                 Bitmap bitmap = Bitmap.createBitmap(baseBitmap, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
-                List<Rect> numberAndSuit = getRectsMathPattern(bitmap,200,true);
+                List<Rect> numberAndSuit = getRectsMathPattern(bitmap,150,true);
                 if(numberAndSuit.size()>0) {
                     for (int i = 0; i <numberAndSuit.size() ; i++) {
                         Rect rect1 = numberAndSuit.get(i);
-//                        rect1.right+=1;
-//                        rect1.bottom+=1;
                         if (rect1.right - rect1.left > 0 && rect1.bottom - rect1.top > 0) {
                             Bitmap bitmap2 = Bitmap.createBitmap(bitmap, rect1.left, rect1.top, rect1.right - rect1.left, rect1.bottom - rect1.top);
                             if(i==0){
@@ -215,7 +213,7 @@ public class GetCardDataManager {
                                     Level level2 = new Level("null", null, bitmap2.getWidth(), bitmap2.getHeight(), bitmap2);
                                     card2.setCardLevel(level2);
                                     cardsInZone.add(card2);
-                                Log.d("nhatnhat", ": "+checkNumber(pixels,200,true,bitmap2.getWidth(),bitmap2.getHeight()));
+                                Log.d("nhatnhat", ": "+checkNumber(pixels,150,true,bitmap2.getWidth(),bitmap2.getHeight()));
 
                                  }
                             }
@@ -580,6 +578,7 @@ public class GetCardDataManager {
         List<Rect> rectOutside = new ArrayList<>();
         Rect maxRectInside = new Rect();
         Rect maxRectOutside = new Rect();
+        Rect premaxRectOutside = new Rect();
         int rectInsideNumberCount =0;
         int rectOutsideNumberCount =0;
         for (int i = 0; i <rects.size() ; i++) {
@@ -591,7 +590,8 @@ public class GetCardDataManager {
                     maxRectInside = rects.get(i);
                 }
             }else {
-                if((rects.get(i).bottom-rects.get(i).top)*(rects.get(i).right-rects.get(i).left)>0){
+                Rect rect =rects.get(i);
+                if(rect.left>=0&&rect.right>=0&&rect.top>=0&&rect.bottom>=0){
                     rectOutside.add(rects.get(i));
                     rectOutsideNumberCount++;
                     if(((rects.get(i).bottom-rects.get(i).top)*(rects.get(i).right-rects.get(i).left))>(maxRectOutside.bottom-maxRectOutside.top)*(maxRectOutside.right-maxRectOutside.left)){
@@ -602,6 +602,13 @@ public class GetCardDataManager {
                 }
             }
 
+        }
+        for (int i = 0; i < rectOutside.size(); i++) {
+            Log.d("nhatnhat", "checkNumber: "+rectOutside.get(i).left+"_"+((rectOutside.get(i).right-rectOutside.get(i).left)*(rectOutside.get(i).bottom-rectOutside.get(i).top)));
+            if(((rectOutside.get(i).bottom-rectOutside.get(i).top)*(rectOutside.get(i).right-rectOutside.get(i).left))<((maxRectOutside.bottom-maxRectOutside.top)*(maxRectOutside.right-maxRectOutside.left))&&((rectOutside.get(i).bottom-rectOutside.get(i).top)*(rectOutside.get(i).right-rectOutside.get(i).left))>(premaxRectOutside.bottom-premaxRectOutside.top)*(premaxRectOutside.right-premaxRectOutside.left)){
+                Log.d("nhatnhat", "checkNumber: "+rectOutside.get(i).left+"___"+((rectOutside.get(i).right-rectOutside.get(i).left)*(rectOutside.get(i).bottom-rectOutside.get(i).top)));
+                premaxRectOutside = rectOutside.get(i);
+        }
         }
         if(rectInside.size()==2){
             //Q,8,
@@ -628,21 +635,29 @@ public class GetCardDataManager {
             }
         }else {
             //2,3,5,7,10,J,K
-            Log.d("nhatnhat", "checkNumber: "+rectOutside.size());
             if(rectOutside.size()>3){
                 //3,5,K
-                for (int i = 0; i <rectOutside.size() ; i++) {
-                    Log.d("nhatnhat", "total"+i+" left:"+rectOutside.get(i).left+" right:"+rectOutside.get(i).right+" top:"+rectOutside.get(i).top+" bot:"+rectOutside.get(i).bottom);
+
+
+                Log.d("nhatnhat", "checkNumber: "+premaxRectOutside.left+"|"+maxRectOutside.left);
+                for (int i = 0; i <rectOutside.size() ; i++) {    //4,6
+                    int sqrFirst =((rectOutside.get(i).right-rectOutside.get(i).left)*(rectOutside.get(i).bottom-rectOutside.get(i).top));
+
+                    Log.d("nhatnhat", "checkNumber: "+sqrFirst+"/"+rectOutside.get(i).left);
                 }
-                if(rectOutside.get(0).left>width/2){
+                if(premaxRectOutside.left>width/2){
                     //3
                     return "3";
                 }else {
                     //5,K
-                    if(maxRectOutside.left==0){
-                        return "5";
-                    }else {
+
+//                    Log.d("nhatnhat", "checkNumber: "+rectOutside.get(0).left +"/"+width/2);
+                    if(maxRectOutside.left>=width/2){
                         return "K";
+                    }else {
+                        if(premaxRectOutside.bottom>height/2) {
+                            return "2";
+                        }else return "5";
                     }
                 }
             }else if(rectOutside.size()>1){
@@ -870,14 +885,14 @@ public class GetCardDataManager {
                 if (i > numberRect.bottom)
                     numberRect.bottom = i;
                 coverImageIntArray1D[j + i * width] = -1;
-                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i - 1);
+//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i - 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i);
-                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i + 1);
+//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i + 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j, i - 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j, i + 1);
-                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i - 1);
+//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i - 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i);
-                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i + 1);
+//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i + 1);
             }
         }else {
 
@@ -895,14 +910,14 @@ public class GetCardDataManager {
                 if (i > numberRect.bottom)
                     numberRect.bottom = i;
                 coverImageIntArray1D[j + i * width] = -1;
-                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i - 1);
+                //                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i - 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i);
-                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i + 1);
+//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i + 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j, i - 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j, i + 1);
-                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i - 1);
+//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i - 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i);
-                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i + 1);
+//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i + 1);
             }
         }
 
@@ -955,7 +970,7 @@ public class GetCardDataManager {
             for (int j = 0; j < bitmap.getWidth(); j++) {
                 int pixel = coverImageIntArray1D[j + i * bitmap.getWidth()];
                 if(lessThanPattern) {
-                    if (Color.red(pixel) < patternRedColor) {
+                    if (Color.red(pixel) <= patternRedColor) {
                         followPath(cardsZone, patternRedColor, true, coverImageIntArray1D, bitmap.getWidth(), bitmap.getHeight(), j, i);
 //                        cardsZone.right+=1;
                         allRectCanBeCardZone.add(cardsZone);
