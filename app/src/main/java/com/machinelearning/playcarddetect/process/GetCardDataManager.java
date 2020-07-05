@@ -47,14 +47,14 @@ public class GetCardDataManager {
             matchInRow[1]=-1;
             for (int j = 0; j < width; j++) {
                 int pixel = pixels[j + i * width];
-                String red = Color.red(pixel)+"";
-                if(red.trim().length()==1){
-                    red="0"+red;
-                }
-                if(red.trim().length()==2){
-                    red="0"+red;
-                }
-                row+=red+" :";
+//                String red = Color.red(pixel)+"";
+//                if(red.trim().length()==1){
+//                    red="0"+red;
+//                }
+//                if(red.trim().length()==2){
+//                    red="0"+red;
+//                }
+//                row+=red+" :";
                 if(lessThan) {
                     if (Color.red(pixel) <patternColor){
                         if(matchInRow[0]==-1){
@@ -82,7 +82,7 @@ public class GetCardDataManager {
                     }
                 }
             }
-            Log.d("nhatnhat", "checkNumber: "+row);
+//            Log.d("nhatnhat", "checkNumber: "+row);
             int matchInRowCount=0;
             if(listMatchInRow.size()>1){
                 if(listMatchInRow.size()==2&&listMatchInRow.size()==listMatch.size()){
@@ -320,16 +320,11 @@ public class GetCardDataManager {
             String row ="";
             for (int j = 0; j < width; j++) {
                 int pixel = pixels[j + i * width];
-                String red = Color.red(pixel)+"";
-                if(red.trim().length()==1){
-                    red="0"+red;
-                }
-                if(red.trim().length()==2){
-                    red="0"+red;
-                }
-                row+=red+" :";
+//                String red = Color.red(pixel)+"";
+
                 if(lessThan) {
                     if (Color.red(pixel) <patternColor){
+                        row+=" 0";
                         if(j==width-1)
                             notMax=false;
                         maxValueInThisRow=j;
@@ -344,6 +339,8 @@ public class GetCardDataManager {
                             listMatch.add(matchInRow);
                         }
                     }else {
+
+                        row+=" 1";
                         if(matchInRow[0]!=-1){
                             listMatch.add(matchInRow);
                             listMatchInRow.add(matchInRow);
@@ -378,6 +375,8 @@ public class GetCardDataManager {
             listMatchInRow.clear();
         }
 
+
+
         List<Rect> rects = getRectsMathPattern(pixels,width,height,patternColor,false);
         List<Rect> rectInside = new ArrayList<>();
         List<Rect> rectOutside = new ArrayList<>();
@@ -406,21 +405,64 @@ public class GetCardDataManager {
 
 
         if(rectInside.size()>0){
-            return Suit.SuitType.NotDetect;
+            for (int i = 0; i <rectInside.size() ; i++) {
+                Rect rect = rectInside.get(i);
+                if((rect.right-rect.left)*(rect.bottom-rect.top)>1){
+                    return Suit.SuitType.NotDetect;
+                }
+            }
         }
         if(isCo){
             return Suit.SuitType.Co;
         }
-        if(rectOutside.size()==4){
-            if((listMatch.get(listMatch.size()-1)[1]-listMatch.get(listMatch.size()-1)[0])*4<width) {
-                return Suit.SuitType.Ro;
-            }else {
-                if(isChuon){
-                    return Suit.SuitType.Chuon;
-                }else {
-                    return Suit.SuitType.Bich;
+        int preTbc=0;
+        int maxDif=0;
+        for (int i = 0; i <width; i++) {
+            int tbc=0;
+            for (int j = 0; j < height/2; j++) {
+                int pixel = pixels[i + j * width];
+                if(lessThan) {
+                    if (Color.red(pixel) <patternColor){
+                        tbc+=1+(height/2);
+                    }
                 }
             }
+
+            if(preTbc!=0){
+                if(tbc-preTbc>maxDif){
+                    maxDif=tbc-preTbc;
+                }
+            }
+                preTbc =tbc;
+        }
+        Log.d("nhatnhat", "checkSuit: "+maxDif+"/"+height);
+        if(rectOutside.size()==4){
+                if(maxDif>(height*2)){
+                    return Suit.SuitType.Chuon;
+                }else {
+                    boolean isBich=false;
+                    int preCount=0;
+                    for (int i = height-1; i >height/2 ; i--) {
+                        int cout=0;
+                        for (int j = 0; j <width ; j++) {
+                            int pixel = pixels[j + i * width];
+                                if (Color.red(pixel) <patternColor){
+                                    cout++;
+                                }
+                        }
+                        if(preCount!=0){
+                            if(cout<preCount){
+                                isBich=true;
+                            }
+                        }
+                        preCount =cout;
+                    }
+                    if(isBich){
+                        return Suit.SuitType.Bich;
+                    }else {
+                        return Suit.SuitType.Ro;
+                    }
+                }
         }
         return Suit.SuitType.NotDetect;
     }
@@ -438,19 +480,17 @@ public class GetCardDataManager {
                 number = "";
                 suitType = Suit.SuitType.NotDetect;
                 Bitmap bitmap = Bitmap.createBitmap(baseBitmap, rect.left, rect.top, (rect.right - rect.left)+1, (rect.bottom - rect.top)+1);
+
                 List<Rect> numberAndSuit = getRectsMathPattern(bitmap,150,true);
                 if(numberAndSuit.size()>0) {
                     outsideloop:
                     for (int i = 0; i <numberAndSuit.size() ; i++) {
                         Rect rect1 = numberAndSuit.get(i);
-                        Rect rect2 = numberAndSuit.get(i);
-                        if (rect1.right - rect1.left > 0 && rect1.bottom - rect1.top > 0) {
                             Bitmap bitmap2 = Bitmap.createBitmap(bitmap, rect1.left, rect1.top, (rect1.right - rect1.left)+1, (rect1.bottom - rect1.top)+1);
                             int[] pixels = new int[bitmap2.getWidth() * bitmap2.getHeight()];
                             bitmap2.getPixels(pixels, 0, bitmap2.getWidth(),
                                     0, 0, bitmap2.getWidth(), bitmap2.getHeight());
                             if(i==0){
-
                                 number =checkNumber(pixels,150,true,bitmap2.getWidth(),bitmap2.getHeight());
 //                                Log.d("nhatnhat", ": "+number);
 //                                if(!number.equals("Not Detected")){
@@ -462,12 +502,12 @@ public class GetCardDataManager {
                             }
                             else {
                                 if(!number.equals("Not Detected")&&!number.equals("")){
-                                        if(bitmap2.getWidth()<10||bitmap2.getHeight()<10){
-                                            bitmap2 = Bitmap.createScaledBitmap(bitmap2,5,5,false);
-                                            pixels = new int[bitmap2.getWidth() * bitmap2.getHeight()];
-                                            bitmap2.getPixels(pixels, 0, bitmap2.getWidth(),
-                                                    0, 0, bitmap2.getWidth(), bitmap2.getHeight());
-                                        }
+//                                        if(bitmap2.getWidth()<20||bitmap2.getHeight()<20){
+//                                            bitmap2 = Bitmap.createScaledBitmap(bitmap2,20,40,false);
+//                                            pixels = new int[bitmap2.getWidth() * bitmap2.getHeight()];
+//                                            bitmap2.getPixels(pixels, 0, bitmap2.getWidth(),
+//                                                    0, 0, bitmap2.getWidth(), bitmap2.getHeight());
+////                                        }
                                        suitType =checkSuit(pixels,150,true,bitmap2.getWidth(),bitmap2.getHeight());
 //                                    Card card2 = new Card();
 //                                    Level level2 = new Level("null", null, bitmap.getWidth(), bitmap.getHeight(), bitmap);
@@ -476,14 +516,16 @@ public class GetCardDataManager {
                                     Log.d("checksuit", ""+number+"/"+suitType);
                                     if(suitType!= Suit.SuitType.NotDetect){
                                         Card card2 = new Card();
-                                        Level level2 = new Level("null", null, bitmap2.getWidth(), bitmap2.getHeight(), bitmap2);
+                                        Level level2 = new Level(number, null, bitmap.getWidth(), bitmap.getHeight(), bitmap);
+                                        Suit suit = new Suit(suitType,null,0,0,null);
                                         card2.setCardLevel(level2);
+                                        card2.setCardRect(rect1);
+                                        card2.setCardsuit(suit);
                                         cardsInZone.add(card2);
                                         break outsideloop;
                                     }
                                 }
                             }
-                        }
                     }
 
                 }
@@ -759,7 +801,9 @@ public class GetCardDataManager {
                     if (Color.red(pixel) <= patternRedColor) {
                         followPath(cardsZone, patternRedColor, true, coverImageIntArray1D, bitmap.getWidth(), bitmap.getHeight(), j, i);
 //                        cardsZone.right+=1;
-                        allRectCanBeCardZone.add(cardsZone);
+                        if (cardsZone.right - cardsZone.left > 0 && cardsZone.bottom - cardsZone.top > 0) {
+                            allRectCanBeCardZone.add(cardsZone);
+                        }
                         cardsZone = new Rect();
                         cardsZone.left = -1;
                     }
@@ -767,7 +811,9 @@ public class GetCardDataManager {
                     if (Color.red(pixel) >= patternRedColor) {
                         followPath(cardsZone, patternRedColor, false, coverImageIntArray1D, bitmap.getWidth(), bitmap.getHeight(), j, i);
 //                        cardsZone.right+=1;
-                        allRectCanBeCardZone.add(cardsZone);
+                        if (cardsZone.right - cardsZone.left > 0 && cardsZone.bottom - cardsZone.top > 0) {
+                            allRectCanBeCardZone.add(cardsZone);
+                        }
                         cardsZone = new Rect();
                         cardsZone.left = -1;
                     }

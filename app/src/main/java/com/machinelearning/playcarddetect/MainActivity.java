@@ -262,24 +262,12 @@ public class MainActivity extends AppCompatActivity implements CaptureManager.on
             if(list.get(i).getCardLevel()!=null) {
                 bitmaps.add(list.get(i).getCardLevel().getBitmap());
             }
-            if(list.get(i).getCardsuit()!=null) {
-                bitmaps.add(list.get(i).getCardsuit().getBitmap());
-            }
-//            Level level = list.get(i).getCardLevel();
-//            Bitmap blevel = Bitmap.createBitmap(level.getWidth(), level.getHeight(), Bitmap.Config.ARGB_8888);
-//            bitmap.setPixels(level.getPixel(), 0, level.getWidth(), 0, 0, level.getWidth(), level.getHeight());
-//            bitmaps.add(blevel);
-//
-//            Suit suit = list.get(i).getCardsuit();
-//            Bitmap bsuit = Bitmap.createBitmap(suit.getWidth(), suit.getHeight(), Bitmap.Config.ARGB_8888);
-//            bitmap.setPixels(suit.getPixels(), 0, suit.getWidth(), 0, 0, suit.getWidth(), suit.getHeight());
-//            bitmaps.add(bsuit);
         }
 
 
         Log.d(TAG, "onBitmapReady: "+list.size()+"/"+bitmaps.size());
         Log.d(TAG, "time: "+(System.currentTimeMillis()-start));
-        BitmapsAdapter adapter = new BitmapsAdapter(bitmaps);
+        BitmapsAdapter adapter = new BitmapsAdapter(list);
                     recyclerView.setAdapter(adapter);
                     imageoverlay.setVisibility(View.VISIBLE);
 

@@ -15,7 +15,7 @@ import com.machinelearning.playcarddetect.data.card.Card;
 import java.util.List;
 
 public class BitmapsAdapter extends RecyclerView.Adapter<BitmapsAdapter.MyViewHolder> {
-    private List<Bitmap> mDataset;
+    private List<Card> mDataset;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -27,11 +27,12 @@ public class BitmapsAdapter extends RecyclerView.Adapter<BitmapsAdapter.MyViewHo
         public MyViewHolder(View view) {
             super(view);
             imagelevel = view.findViewById(R.id.iv_cardlevel);
+            cardname = view.findViewById(R.id.tv_cardname);
         }
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public BitmapsAdapter(List<Bitmap> myDataset) {
+    public BitmapsAdapter(List<Card> myDataset) {
         mDataset = myDataset;
     }
 
@@ -52,7 +53,8 @@ public class BitmapsAdapter extends RecyclerView.Adapter<BitmapsAdapter.MyViewHo
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         if(mDataset.get(position)!=null) {
-            holder.imagelevel.setImageBitmap(mDataset.get(position));
+            holder.imagelevel.setImageBitmap(mDataset.get(position).getCardLevel().getBitmap());
+            holder.cardname.setText(mDataset.get(position).getCardLevel().getCardLevel()+" "+mDataset.get(position).getCardsuit().getSuitType().toString());
         }
 //        holder.imagelevel.setImageBitmap(mDataset.get(position).getCardLevel().getCardLevelBitmap());
 //        holder.cardname.setText(mDataset.get(position).getCardLevel().getCardLevel()+" : "+mDataset.get(position).getCardsuit().getSuitType().name());

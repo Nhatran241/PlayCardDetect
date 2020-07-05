@@ -124,8 +124,8 @@ public class CaptureManager {
             final Point size = new Point();
             display.getRealSize(size);
 //            if(width<height) {
-                width = 720;
-                height = 480;
+                width = 1080;
+                height = 720;
 //            }else {
 //                width = ;
 //                height = size.x;
