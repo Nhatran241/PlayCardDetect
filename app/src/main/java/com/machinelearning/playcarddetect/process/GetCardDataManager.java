@@ -31,207 +31,15 @@ public class GetCardDataManager {
             instance = new GetCardDataManager();
         return instance;
     }
-//    public void getCardDataFromBitmap(Bitmap baseBitmap,GetCardDataFromBitmapListener getCardDataFromBitmapListener){
-//        List<Card> cardList = new ArrayList<>();
-//        Bitmap resizedBitmap = getResizeBitmap(baseBitmap);
-//        baseBitmap.recycle();
-//        if(recognizer ==null)
-//            recognizer = TextRecognition.getClient();
-//        recognizer.process(getRecongnizerImage(resizedBitmap))
-//                .addOnSuccessListener(new OnSuccessListener<Text>() {
-//                    @Override
-//                    public void onSuccess(Text visionText) {
-//
-//                        for (int i = 0; i < visionText.getTextBlocks().size(); i++) {
-//                            for (Text.Line line : visionText.getTextBlocks().get(i).getLines()) {
-//                                for (Text.Element element : line.getElements()) {
-//                                    Rect textRect = element.getBoundingBox();
-//                                    String cardName = element.getText().trim();
-//                                    if (isCard(resizedBitmap, textRect)) {
-//                                        if (cardName.length() == 1||cardName.equals("10")) {
-//                                            Log.d("nhatnhat", "onSuccess: "+cardName);
-//                                            if (cardName.equals("A") || cardName.equals("2") || cardName.equals("3") ||
-//                                                    cardName.equals("4") || cardName.equals("5") || cardName.equals("6") ||
-//                                                    cardName.equals("7") || cardName.equals("8") || cardName.equals("9") ||
-//                                                    cardName.equals("10") || cardName.equals("J") || cardName.equals("Q") ||
-//                                                    cardName.equals("K") || cardName.equals("1") || cardName.equals("0")) {
-////                                                textRect.top=textRect.top;
-//                                                textRect.left=textRect.centerX()-5;
-//                                                textRect.right=textRect.centerX()+5;
-////                                                textRect.bottom +=h;
-//                                                Card card =checkSuitOfCard(textRect, resizedBitmap, cardName);
-//                                                if(card!=null)
-//                                                    cardList.add(card);
-//                                            }
-//                                        } else {
-//
-//                                            Log.d("nhatnhat", "onSuccess: "+cardName+"|"+textRect.left+" : "+textRect.right+"ti le" +(resizedBitmap.getWidth()/(textRect.right-textRect.left)));
-//                                            int length = cardName.length();
-//                                            if(cardName.contains("10"))
-//                                                length-=1;
-//                                            int rectW = textRect.right - textRect.left;
-//                                            for (int j = 0; j < length; j++) {
-//                                                Rect rect = new Rect();
-//                                                rect.left = textRect.left + ((rectW / length) * j);
-//                                                rect.right = rect.left + rectW/length;
-//                                                Log.d("nhatnhat", "onSuccess: "+cardName.charAt(j)+" : "+rect.left +"/"+rect.right+"");
-////                                                rect.right = rect.right-(rect.right-rect.left)/2;
-////                                                int h = (textRect.bottom-textRect.top)*2/3;
-//                                                rect.top=textRect.top;
-//                                                rect.bottom =textRect.bottom;
-//                                                if (cardName.charAt(j)=='A' ||cardName.charAt(j)=='2' ||cardName.charAt(j)=='3' ||
-//                                                        cardName.charAt(j)=='4' ||cardName.charAt(j)=='5' ||cardName.charAt(j)=='6' ||
-//                                                        cardName.charAt(j)=='7' ||cardName.charAt(j)=='8' ||cardName.charAt(j)=='9' ||
-//                                                        cardName.charAt(j)=='J' ||cardName.charAt(j)=='Q' ||cardName.charAt(j)=='K' ) {
-//                                                    Card card = checkSuitOfCard(rect, resizedBitmap, cardName.charAt(j) + "");
-//                                                    if (card != null)
-//                                                        cardList.add(card);
-//                                                }else if(cardName.charAt(j)=='1'){
-//                                                    Card card = checkSuitOfCard(rect, resizedBitmap, "10");
-//                                                    if (card != null)
-//                                                        cardList.add(card);
-//                                                }
-//                                            }
-//                                        }
-//                                    }
-//
-//                                }
-//                            }
-//
-//                        }
-//                        getCardDataFromBitmapListener.onGetDataCompleted(cardList);
-//                    }
-//
-//                })
-//                .addOnFailureListener(
-//                        new OnFailureListener() {
-//                            @Override
-//                            public void onFailure(@NonNull Exception e) {
-//                                getCardDataFromBitmapListener.onGetDataFailed(e.toString());
-//                            }
-//                        });
-//    }
 
-    public Suit.SuitType checkSuit(int[] pixels,int patternColor,boolean lessThan,int width,int height){
-
-        List<Rect> rects = getRectsMathPattern(pixels,width,height,patternColor,false);
-        List<Rect> rectInside = new ArrayList<>();
-        List<Rect> rectOutside = new ArrayList<>();
-        Rect maxRectInside = new Rect();
-        Rect maxRectOutside = new Rect();
-        for (int i = 0; i <height; i++) {
-            String row = "";
-            int[] matchInRow = new int[2];
-            matchInRow[0]=-1;
-            matchInRow[1]=-1;
-            for (int j = 0; j < width; j++) {
-                int pixel = pixels[j + i * width];
-                String red = Color.red(pixel)+"";
-                if(red.trim().length()==1){
-                    red="0"+red;
-                }
-                if(red.trim().length()==2){
-                    red="0"+red;
-                }
-                row+=red+" :";
-
-            }
-            Log.d("nhatnhatnhat", "checkSuit: "+row);
-
-        }
-        for (int i = 0; i <rects.size() ; i++) {
-            if(rects.get(i).left>0&&rects.get(i).right<width-1&&rects.get(i).top>0&&rects.get(i).bottom<height-1){
-                rectInside.add(rects.get(i));
-                // Inside number
-                if(((rects.get(i).bottom-rects.get(i).top)*(rects.get(i).right-rects.get(i).left))>(maxRectInside.bottom-maxRectInside.top)*(maxRectInside.right-maxRectInside.left)){
-                    maxRectInside = rects.get(i);
-                }
-            }else {
-                Rect rect =rects.get(i);
-                if(rect.left>=0&&rect.right>=0&&rect.top>=0&&rect.bottom>=0){
-                    rectOutside.add(rects.get(i));
-                    if(((rects.get(i).bottom-rects.get(i).top)*(rects.get(i).right-rects.get(i).left))>(maxRectOutside.bottom-maxRectOutside.top)*(maxRectOutside.right-maxRectOutside.left)){
-                        maxRectOutside = rects.get(i);
-                    }
-
-
-                }
-            }
-
-        }
-        Log.d("nhatnhatnhat", "checkSuit: "+rectInside.size()+"/"+rectOutside.size());
-        for (int i = 0; i <rectInside.size() ; i++) {
-            Log.d("nhatnhatnhat", "inside left:"+rectInside.get(i).left+" right:"+rectInside.get(i).right+" top:"+rectInside.get(i).top+" bot:"+rectInside.get(i).bottom);
-        }
-        for (int i = 0; i <rectOutside.size() ; i++) {
-            Log.d("nhatnhatnhat", "outside left:"+rectOutside.get(i).left+" right:"+rectOutside.get(i).right+" top:"+rectOutside.get(i).top+" bot:"+rectOutside.get(i).bottom);
-        }
-
-        return Suit.SuitType.NotDetect;
-    }
-    public List<Card> getCardsZoneBitmap(Bitmap baseBitmap , Rect zoneContainCardsZone,int patternColum,int patternZone){
-        List<Card> cardsInZone = new ArrayList<>();
-        List<Rect> getCards = getRectsMathPattern(baseBitmap,patternZone,false);
-        for (Rect rect:
-                getCards) {
-            // Lá bài có độ rộng lớn hơn 10 và độ cao lớn 10
-            if(rect.right-rect.left>=10 && rect.bottom-rect.top>10) {
-                Bitmap bitmap = Bitmap.createBitmap(baseBitmap, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
-                List<Rect> numberAndSuit = getRectsMathPattern(bitmap,150,true);
-                boolean isCard=false;
-                if(numberAndSuit.size()>0) {
-                    for (int i = 0; i <numberAndSuit.size() ; i++) {
-                        Rect rect1 = numberAndSuit.get(i);
-                        Rect rect2 = numberAndSuit.get(i);
-                        if (rect1.right - rect1.left > 0 && rect1.bottom - rect1.top > 0) {
-                            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, rect1.left, rect1.top, rect1.right - rect1.left, rect1.bottom - rect1.top);
-                            int[] pixels = new int[bitmap2.getWidth() * bitmap2.getHeight()];
-                            bitmap2.getPixels(pixels, 0, bitmap2.getWidth(),
-                                    0, 0, bitmap2.getWidth(), bitmap2.getHeight());
-                            if(i==0){
-                                    Card card2 = new Card();
-                                    Level level2 = new Level("null", null, bitmap2.getWidth(), bitmap2.getHeight(), bitmap2);
-                                    card2.setCardLevel(level2);
-                                    cardsInZone.add(card2);
-                                    if(!checkNumber(pixels,150,true,bitmap2.getWidth(),bitmap2.getHeight()).equals("Not Detected")){
-                                        isCard=true;
-                                    }
-
-                            }else {
-                                if(isCard){
-                                    Card card2 = new Card();
-                                    Level level2 = new Level("null", null, bitmap2.getWidth(), bitmap2.getHeight(), bitmap2);
-                                    card2.setCardLevel(level2);
-                                    cardsInZone.add(card2);
-                                    Log.d("nhatnhatnhat", checkSuit(pixels,150,true,bitmap2.getWidth(),bitmap2.getHeight())+"");
-                                }
-                            }
-                        }
-                    }
-                }
-//                if(isCard){
-//                    Card card = new Card();
-//                    Level level = new Level("null", null, bitmap.getWidth(), bitmap.getHeight(), bitmap);
-//                    card.setCardLevel(level);
-//                    cardsInZone.add(card);
-//                }
-
-            }
-        }
-        return cardsInZone;
-
-
-    }
 
     private String checkNumber(int[] pixels, int patternColor, boolean lessThan, int width, int height) {
         List<int[]> listMatch = new ArrayList<>();
         List<int[]> listMatchInRow = new ArrayList<>();
-
+        boolean isK =false;
+        boolean isA=false;
+        boolean is10=true;
         int maxMatchInRowCount =0;
-        boolean canBe_K_A=false;
-        boolean canBe_K=false;
-        boolean canBe_A=false;
-        boolean canBe_3_5_7=false;
         for (int i = 0; i <height; i++) {
             String row = "";
             int[] matchInRow = new int[2];
@@ -274,8 +82,17 @@ public class GetCardDataManager {
                     }
                 }
             }
+            Log.d("nhatnhat", "checkNumber: "+row);
             int matchInRowCount=0;
             if(listMatchInRow.size()>1){
+                if(listMatchInRow.size()==2&&listMatchInRow.size()==listMatch.size()){
+                    isK=true;
+                }
+                if(i==height-1){
+                    if(!isK)
+                        isA=true;
+                }
+                is10=false;
                 matchInRowCount=listMatchInRow.get(listMatchInRow.size()-1)[1]-listMatchInRow.get(0)[0];
             }else if(listMatchInRow.size()==1) {
                 matchInRowCount = listMatchInRow.get(0)[1]-listMatchInRow.get(0)[0];
@@ -283,270 +100,9 @@ public class GetCardDataManager {
             if(matchInRowCount>maxMatchInRowCount){
                 maxMatchInRowCount=matchInRowCount;
             }
-            if(listMatchInRow.size()==2){
-                if(listMatch.size()==2){
-                    canBe_K=true;
-                }
-                canBe_K_A=true;
-            }else {
-                if(listMatchInRow.size()==1){
-                    canBe_A=true;
-                }
-                canBe_K_A=false;
-            }
-            Log.d("nhatnhat", ": "+row +"/"+ listMatchInRow.size()+"/"+maxMatchInRowCount);
+
             listMatchInRow.clear();
         }
-//        if(listMatch.get(0)[1]-listMatch.get(0)[0]>=width/3){
-//            //Can be 3_5_6_7_8_9_J
-//            canBe_3_5_7=true;
-//            List<int[]> listMatchInFirstColum = new ArrayList<>();
-//            List<int[]> listMatchInLastColum = new ArrayList<>();
-//            List<int[]> listMatchInMinLeftColum = new ArrayList<>();
-//            List<int[]> listMatchInMaxColum = new ArrayList<>();
-//            int[] matchInFirstColum = new int[2];
-//            matchInFirstColum[0]=-1;
-//            matchInFirstColum[1]=-1;
-//            int[] matchInLastColum = new int[2];
-//            matchInLastColum[0]=-1;
-//            matchInLastColum[1]=-1;
-//            int[] matchInMinLeftColum = new int[2];
-//            matchInMinLeftColum[0]=-1;
-//            matchInMinLeftColum[1]=-1;
-//            int[] matchInMaxColum = new int[2];
-//            matchInMaxColum[0]=-1;
-//            matchInMaxColum[1]=-1;
-//
-//            int minLeft=1000;
-//            int max =-1;
-//            for (int i = 0; i <listMatch.size() ; i++) {
-//                if(listMatch.get(i)[0]< minLeft)
-//                    minLeft =listMatch.get(i)[0];
-//                if(listMatch.get(i)[1]> max)
-//                    max =listMatch.get(i)[1];
-//            }
-//
-//            for (int i = 0; i <height; i++) {
-//                int pixelFirstColum = pixels[listMatch.get(0)[0] + i * width];
-//                    if (Color.red(pixelFirstColum) < patternColor) {
-//                        if (matchInFirstColum[0] == -1) {
-//                            matchInFirstColum[0] = i;
-//                            matchInFirstColum[1] = i;
-//                        } else {
-//                            matchInFirstColum[1] = i;
-//                        }
-//                        if (i == height - 1) {
-//                            listMatchInFirstColum.add(matchInFirstColum);
-//                        }
-//                    } else {
-//                        if (matchInFirstColum[0] != -1) {
-//                            listMatchInFirstColum.add(matchInFirstColum);
-//                            matchInFirstColum = new int[2];
-//                            matchInFirstColum[0] = -1;
-//                            matchInFirstColum[1] = -1;
-//                        }
-//                    }
-//                int pixelLastColum = pixels[listMatch.get(0)[1] + i * width];
-//                if (Color.red(pixelLastColum) < patternColor) {
-//                    if (matchInLastColum[0] == -1) {
-//                        matchInLastColum[0] = i;
-//                        matchInLastColum[1] = i;
-//                    } else {
-//                        matchInLastColum[1] = i;
-//                    }
-//                    if (i == height - 1) {
-//                        listMatchInLastColum.add(matchInLastColum);
-//                    }
-//                } else {
-//                    if (matchInLastColum[0] != -1) {
-//                        listMatchInLastColum.add(matchInLastColum);
-//                        matchInLastColum = new int[2];
-//                        matchInLastColum[0] = -1;
-//                        matchInLastColum[1] = -1;
-//                    }
-//                }
-//                int pixelMinLeftColum = pixels[minLeft + i * width];
-//                if (Color.red(pixelMinLeftColum) < patternColor) {
-//                    if (matchInMinLeftColum[0] == -1) {
-//                        matchInMinLeftColum[0] = i;
-//                        matchInMinLeftColum[1] = i;
-//                    } else {
-//                        matchInMinLeftColum[1] = i;
-//                    }
-//                    if (i == height - 1) {
-//                        listMatchInMinLeftColum.add(matchInMinLeftColum);
-//                    }
-//                } else {
-//                    if (matchInMinLeftColum[0] != -1) {
-//                        listMatchInMinLeftColum.add(matchInMinLeftColum);
-//                        matchInMinLeftColum = new int[2];
-//                        matchInMinLeftColum[0] = -1;
-//                        matchInMinLeftColum[1] = -1;
-//                    }
-//                }
-//                int pixelMaxColum = pixels[max + i * width];
-//                if (Color.red(pixelMaxColum) < patternColor) {
-//                    if (matchInMaxColum[0] == -1) {
-//                        matchInMaxColum[0] = i;
-//                        matchInMaxColum[1] = i;
-//                    } else {
-//                        matchInMaxColum[1] = i;
-//                    }
-//                    if (i == height - 1) {
-//                        listMatchInMaxColum.add(matchInMaxColum);
-//                    }
-//                } else {
-//                    if (matchInMaxColum[0] != -1) {
-//                        listMatchInMaxColum.add(matchInMaxColum);
-//                        matchInMaxColum = new int[2];
-//                        matchInMaxColum[0] = -1;
-//                        matchInMaxColum[1] = -1;
-//                    }
-//                }
-//            }
-//            if(listMatchInFirstColum.size()==2){
-//                if((listMatchInFirstColum.get(listMatchInFirstColum.size()-1)[1]-listMatchInFirstColum.get(listMatchInFirstColum.size()-1)[0])+
-//                        (listMatchInFirstColum.get(0)[1]-listMatchInFirstColum.get(0)[0])+2>height/2){
-//                    return "5";
-//                }else {
-//                    if(listMatchInLastColum.size()>1){
-//                            return "3";
-//                    }else {
-//                        return "J";
-//                    }
-//                }
-//            }else if(listMatchInFirstColum.size()==1){
-//                if(listMatch.size()==height){
-//                    return "10";
-//                }
-//                return "7";
-//            }else {
-//
-//            }
-//        }
-//        else {
-//            List<int[]> listMatchInFirstColum = new ArrayList<>();
-//            List<int[]> listMatchInLastColum = new ArrayList<>();
-//            List<int[]> listMatchInMinLeftColum = new ArrayList<>();
-//            List<int[]> listMatchInMaxColum = new ArrayList<>();
-//            int[] matchInFirstColum = new int[2];
-//            matchInFirstColum[0]=-1;
-//            matchInFirstColum[1]=-1;
-//            int[] matchInLastColum = new int[2];
-//            matchInLastColum[0]=-1;
-//            matchInLastColum[1]=-1;
-//            int[] matchInMaxColum = new int[2];
-//            matchInMaxColum[0]=-1;
-//            matchInMaxColum[1]=-1;
-//            int[] matchInMinLeftColum = new int[2];
-//            matchInMinLeftColum[0]=-1;
-//            matchInMinLeftColum[1]=-1;
-//
-//            int minLeft=1000;
-//            int max =-1;
-//            for (int i = 0; i <listMatch.size() ; i++) {
-//                if(listMatch.get(i)[0]< minLeft)
-//                    minLeft =listMatch.get(i)[0];
-//                if(listMatch.get(i)[1]> max)
-//                    max =listMatch.get(i)[1];
-//            }
-//            for (int i = 0; i <height; i++) {
-//                int pixelFirstColum = pixels[listMatch.get(0)[0] + i * width];
-//                if (Color.red(pixelFirstColum) < patternColor) {
-//                    if (matchInFirstColum[0] == -1) {
-//                        matchInFirstColum[0] = i;
-//                        matchInFirstColum[1] = i;
-//                    } else {
-//                        matchInFirstColum[1] = i;
-//                    }
-//                    if (i == height - 1) {
-//                        listMatchInFirstColum.add(matchInFirstColum);
-//                    }
-//                } else {
-//                    if (matchInFirstColum[0] != -1) {
-//                        listMatchInFirstColum.add(matchInFirstColum);
-//                        matchInFirstColum = new int[2];
-//                        matchInFirstColum[0] = -1;
-//                        matchInFirstColum[1] = -1;
-//                    }
-//                }
-//                int pixelLastColum = pixels[listMatch.get(0)[1] + i * width];
-//                if (Color.red(pixelLastColum) < patternColor) {
-//                    if (matchInLastColum[0] == -1) {
-//                        matchInLastColum[0] = i;
-//                        matchInLastColum[1] = i;
-//                    } else {
-//                        matchInLastColum[1] = i;
-//                    }
-//                    if (i == height - 1) {
-//                        listMatchInLastColum.add(matchInLastColum);
-//                    }
-//                } else {
-//                    if (matchInLastColum[0] != -1) {
-//                        listMatchInLastColum.add(matchInLastColum);
-//                        matchInLastColum = new int[2];
-//                        matchInLastColum[0] = -1;
-//                        matchInLastColum[1] = -1;
-//                    }
-//                }
-//                int pixelMinLeftColum = pixels[minLeft + i * width];
-//                if (Color.red(pixelMinLeftColum) < patternColor) {
-//                    if (matchInMinLeftColum[0] == -1) {
-//                        matchInMinLeftColum[0] = i;
-//                        matchInMinLeftColum[1] = i;
-//                    } else {
-//                        matchInMinLeftColum[1] = i;
-//                    }
-//                    if (i == height - 1) {
-//                        listMatchInMinLeftColum.add(matchInMinLeftColum);
-//                    }
-//                } else {
-//                    if (matchInMinLeftColum[0] != -1) {
-//                        listMatchInMinLeftColum.add(matchInMinLeftColum);
-//                        matchInMinLeftColum = new int[2];
-//                        matchInMinLeftColum[0] = -1;
-//                        matchInMinLeftColum[1] = -1;
-//                    }
-//                }
-//                int pixelMaxColum = pixels[max + i * width];
-//                if (Color.red(pixelMaxColum) < patternColor) {
-//                    if (matchInMaxColum[0] == -1) {
-//                        matchInMaxColum[0] = i;
-//                        matchInMaxColum[1] = i;
-//                    } else {
-//                        matchInMaxColum[1] = i;
-//                    }
-//                    if (i == height - 1) {
-//                        listMatchInMaxColum.add(matchInMaxColum);
-//                    }
-//                } else {
-//                    if (matchInMaxColum[0] != -1) {
-//                        listMatchInMaxColum.add(matchInMaxColum);
-//                        matchInMaxColum = new int[2];
-//                        matchInMaxColum[0] = -1;
-//                        matchInMaxColum[1] = -1;
-//                    }
-//                }
-//
-//            }
-//
-//            if(listMatchInFirstColum.size()==1&&listMatchInLastColum.size()==1){
-//                    return "4";
-//            }else {
-//                Log.d("nhatnhat", "checkNumber: "+listMatchInMinLeftColum.get(0)[1]+"/"+height);
-//                if(listMatchInMinLeftColum.get(0)[1]<height-1){
-//                    return "Q";
-//                }
-//            }
-//        }
-//        if(listMatch.get(listMatch.size()-1)[1]-listMatch.get(listMatch.size()-1)[0]>=maxMatchInRowCount){
-//            return "2";
-//        }
-//        if(canBe_K&&canBe_K_A){
-//            return "K";
-//        }else if(canBe_K_A&&canBe_A&&listMatch.get(0)[1]-listMatch.get(0)[0]<=maxMatchInRowCount/2){
-//            return "A";
-//        }
 
         List<Rect> rects = getRectsMathPattern(pixels,width,height,patternColor,false);
         List<Rect> rectInside = new ArrayList<>();
@@ -554,13 +110,10 @@ public class GetCardDataManager {
         Rect maxRectInside = new Rect();
         Rect maxRectOutside = new Rect();
         Rect premaxRectOutside = new Rect();
-        int rectInsideNumberCount =0;
-        int rectOutsideNumberCount =0;
         for (int i = 0; i <rects.size() ; i++) {
             if(rects.get(i).left>0&&rects.get(i).right<width-1&&rects.get(i).top>0&&rects.get(i).bottom<height-1){
                 rectInside.add(rects.get(i));
                 // Inside number
-                rectInsideNumberCount++;
                 if(((rects.get(i).bottom-rects.get(i).top)*(rects.get(i).right-rects.get(i).left))>(maxRectInside.bottom-maxRectInside.top)*(maxRectInside.right-maxRectInside.left)){
                     maxRectInside = rects.get(i);
                 }
@@ -568,7 +121,6 @@ public class GetCardDataManager {
                 Rect rect =rects.get(i);
                 if(rect.left>=0&&rect.right>=0&&rect.top>=0&&rect.bottom>=0){
                     rectOutside.add(rects.get(i));
-                    rectOutsideNumberCount++;
                     if(((rects.get(i).bottom-rects.get(i).top)*(rects.get(i).right-rects.get(i).left))>(maxRectOutside.bottom-maxRectOutside.top)*(maxRectOutside.right-maxRectOutside.left)){
                         maxRectOutside = rects.get(i);
                     }
@@ -579,11 +131,9 @@ public class GetCardDataManager {
 
         }
         for (int i = 0; i < rectOutside.size(); i++) {
-            Log.d("nhatnhat", "checkNumber: "+rectOutside.get(i).left+"_"+((rectOutside.get(i).right-rectOutside.get(i).left)*(rectOutside.get(i).bottom-rectOutside.get(i).top)));
             if(((rectOutside.get(i).bottom-rectOutside.get(i).top)*(rectOutside.get(i).right-rectOutside.get(i).left))<((maxRectOutside.bottom-maxRectOutside.top)*(maxRectOutside.right-maxRectOutside.left))&&((rectOutside.get(i).bottom-rectOutside.get(i).top)*(rectOutside.get(i).right-rectOutside.get(i).left))>(premaxRectOutside.bottom-premaxRectOutside.top)*(premaxRectOutside.right-premaxRectOutside.left)){
-                Log.d("nhatnhat", "checkNumber: "+rectOutside.get(i).left+"___"+((rectOutside.get(i).right-rectOutside.get(i).left)*(rectOutside.get(i).bottom-rectOutside.get(i).top)));
                 premaxRectOutside = rectOutside.get(i);
-        }
+            }
         }
         if(rectInside.size()==2){
             //Q,8,
@@ -594,59 +144,360 @@ public class GetCardDataManager {
             }else return "8";
 
         }else if(rectInside.size() ==1) {
-            // A,4,6,9
+            if(isA)
+                return "A";
             if (maxRectInside.top < height / 4) {
                 return "9";
             } else {
-                if(rectOutside.size()>=4) {
-                    //4,6
                     int sqrFirst =((rectOutside.get(0).right-rectOutside.get(0).left)*(rectOutside.get(0).bottom-rectOutside.get(0).top));
                     int sqrMaxInside =((maxRectInside.right-maxRectInside.left)*(maxRectInside.bottom-maxRectInside.top));
 
                     if(sqrFirst<sqrMaxInside){
                         return "6";
                     }else return "4";
-                }else return "A";
             }
         }else {
             //2,3,5,7,10,J,K
-            if(rectOutside.size()>3){
-                //3,5,K
+            if(isK)
+                return "K";
+            if(is10)
+                return "10";
+            //2,3,5,7,J
+            List<int[]> listMatchInFirstColum = new ArrayList<>();
+            List<int[]> listMatchInLastColum = new ArrayList<>();
+            List<int[]> listMatchInMinLeftColum = new ArrayList<>();
+            List<int[]> listMatchInMaxColum = new ArrayList<>();
+            int[] matchInFirstColum = new int[2];
+            matchInFirstColum[0]=-1;
+            matchInFirstColum[1]=-1;
+            int[] matchInLastColum = new int[2];
+            matchInLastColum[0]=-1;
+            matchInLastColum[1]=-1;
+            int[] matchInMinLeftColum = new int[2];
+            matchInMinLeftColum[0]=-1;
+            matchInMinLeftColum[1]=-1;
+            int[] matchInMaxColum = new int[2];
+            matchInMaxColum[0]=-1;
+            matchInMaxColum[1]=-1;
 
+            int minLeft=1000;
+            int max =-1;
+            for (int i = 0; i <listMatch.size() ; i++) {
+                if(listMatch.get(i)[0]< minLeft)
+                    minLeft =listMatch.get(i)[0];
+                if(listMatch.get(i)[1]> max)
+                    max =listMatch.get(i)[1];
+            }
 
-                Log.d("nhatnhat", "checkNumber: "+premaxRectOutside.left+"|"+maxRectOutside.left);
-                for (int i = 0; i <rectOutside.size() ; i++) {    //4,6
-                    int sqrFirst =((rectOutside.get(i).right-rectOutside.get(i).left)*(rectOutside.get(i).bottom-rectOutside.get(i).top));
-
-                    Log.d("nhatnhat", "checkNumber: "+sqrFirst+"/"+rectOutside.get(i).left);
-                }
-                if(premaxRectOutside.left>width/2){
-                    //3
-                    return "3";
-                }else {
-                    //5,K
-
-//                    Log.d("nhatnhat", "checkNumber: "+rectOutside.get(0).left +"/"+width/2);
-                    if(maxRectOutside.left>=width/2){
-                        return "K";
-                    }else {
-                        if(premaxRectOutside.bottom>height/2) {
-                            return "2";
-                        }else return "5";
+            for (int i = 0; i <height; i++) {
+                int pixelFirstColum = pixels[listMatch.get(0)[0] + i * width];
+                if (Color.red(pixelFirstColum) < patternColor) {
+                    if (matchInFirstColum[0] == -1) {
+                        matchInFirstColum[0] = i;
+                        matchInFirstColum[1] = i;
+                    } else {
+                        matchInFirstColum[1] = i;
+                    }
+                    if (i == height - 1) {
+                        listMatchInFirstColum.add(matchInFirstColum);
+                    }
+                } else {
+                    if (matchInFirstColum[0] != -1) {
+                        listMatchInFirstColum.add(matchInFirstColum);
+                        matchInFirstColum = new int[2];
+                        matchInFirstColum[0] = -1;
+                        matchInFirstColum[1] = -1;
                     }
                 }
-            }else if(rectOutside.size()>1){
-                //7,J
-                if(maxRectOutside.top==0){
-                    return "J";
-                }else return "7";
-            }else if(rectOutside.size()==0) {
-                return "10";
-            }else {
+                int pixelLastColum = pixels[listMatch.get(0)[1] + i * width];
+                if (Color.red(pixelLastColum) < patternColor) {
+                    if (matchInLastColum[0] == -1) {
+                        matchInLastColum[0] = i;
+                        matchInLastColum[1] = i;
+                    } else {
+                        matchInLastColum[1] = i;
+                    }
+                    if (i == height - 1) {
+                        listMatchInLastColum.add(matchInLastColum);
+                    }
+                } else {
+                    if (matchInLastColum[0] != -1) {
+                        listMatchInLastColum.add(matchInLastColum);
+                        matchInLastColum = new int[2];
+                        matchInLastColum[0] = -1;
+                        matchInLastColum[1] = -1;
+                    }
+                }
+                int pixelMinLeftColum = pixels[minLeft + i * width];
+                if (Color.red(pixelMinLeftColum) < patternColor) {
+                    if (matchInMinLeftColum[0] == -1) {
+                        matchInMinLeftColum[0] = i;
+                        matchInMinLeftColum[1] = i;
+                    } else {
+                        matchInMinLeftColum[1] = i;
+                    }
+                    if (i == height - 1) {
+                        listMatchInMinLeftColum.add(matchInMinLeftColum);
+                    }
+                } else {
+                    if (matchInMinLeftColum[0] != -1) {
+                        listMatchInMinLeftColum.add(matchInMinLeftColum);
+                        matchInMinLeftColum = new int[2];
+                        matchInMinLeftColum[0] = -1;
+                        matchInMinLeftColum[1] = -1;
+                    }
+                }
+                int pixelMaxColum = pixels[max + i * width];
+                if (Color.red(pixelMaxColum) < patternColor) {
+                    if (matchInMaxColum[0] == -1) {
+                        matchInMaxColum[0] = i;
+                        matchInMaxColum[1] = i;
+                    } else {
+                        matchInMaxColum[1] = i;
+                    }
+                    if (i == height - 1) {
+                        listMatchInMaxColum.add(matchInMaxColum);
+                    }
+                } else {
+                    if (matchInMaxColum[0] != -1) {
+                        listMatchInMaxColum.add(matchInMaxColum);
+                        matchInMaxColum = new int[2];
+                        matchInMaxColum[0] = -1;
+                        matchInMaxColum[1] = -1;
+                    }
+                }
+            }
+
+            //2,3,5,7,J
+            if(listMatchInFirstColum.size()==1){
+                if(listMatch.get(0)[1]-listMatch.get(0)[0]>=width*8/10&&
+                        listMatch.get(listMatch.size()-1)[1]-listMatch.get(listMatch.size()-1)[0]<=width/2&&
+                rectOutside.size()>=2){
+                        return "7";
+                }
                 return "Not Detected";
+            }else if(listMatchInFirstColum.size()==2){
+                //3,5,J
+                if(listMatchInLastColum.size()==1){
+                    if(rectOutside.size()==3) {
+                        return "J";
+                    }else {
+                        return "Not Detected";
+                    }
+                }else {
+                    if(premaxRectOutside.left>width/2){
+                        //3
+                        return "3";
+                    }else {
+                        //5
+                        return "5";
+                    }
+                }
+            }else {
+                if(listMatch.get(listMatch.size()-1)[1]-listMatch.get(listMatch.size()-1)[0]>width*8/10){
+                    return "2";
+                }else return "Not Detected";
+            }
+
+        }
+
+    }
+
+    public Suit.SuitType checkSuit(int[] pixels,int patternColor,boolean lessThan,int width,int height){
+        List<int[]> listMatch = new ArrayList<>();
+        List<int[]> listMatchInRow = new ArrayList<>();
+        boolean isCo =false;
+        boolean isChuon =false;
+        boolean notMax =true;
+        int maxMatchInRowCount =0;
+        int preValue =0;
+        int maxValueInThisRow=0;
+        for (int i = 0; i <height; i++) {
+            int[] matchInRow = new int[2];
+            matchInRow[0]=-1;
+            matchInRow[1]=-1;
+
+            String row ="";
+            for (int j = 0; j < width; j++) {
+                int pixel = pixels[j + i * width];
+                String red = Color.red(pixel)+"";
+                if(red.trim().length()==1){
+                    red="0"+red;
+                }
+                if(red.trim().length()==2){
+                    red="0"+red;
+                }
+                row+=red+" :";
+                if(lessThan) {
+                    if (Color.red(pixel) <patternColor){
+                        if(j==width-1)
+                            notMax=false;
+                        maxValueInThisRow=j;
+                        if(matchInRow[0]==-1){
+                            matchInRow[0]=j;
+                            matchInRow[1]=j;
+                        }else {
+                            matchInRow[1]=j;
+                        }
+                        if(j==width-1){
+                            listMatchInRow.add(matchInRow);
+                            listMatch.add(matchInRow);
+                        }
+                    }else {
+                        if(matchInRow[0]!=-1){
+                            listMatch.add(matchInRow);
+                            listMatchInRow.add(matchInRow);
+                            matchInRow = new int[2];
+                            matchInRow[0]=-1;
+                            matchInRow[1]=-1;
+                        }
+                    }
+                }
+            }
+            if(preValue!=0){
+                if(notMax&&maxValueInThisRow<preValue){
+                    Log.d("checksuit", "checkSuit: "+maxValueInThisRow+"/"+preValue);
+                    isChuon=true;
+                }
+            }else {
+                preValue = maxValueInThisRow;
+            }
+            Log.d("checksuit", "checkSuit: "+row);
+            int matchInRowCount=0;
+            if(listMatchInRow.size()>1){
+                if(listMatchInRow.size()==listMatch.size())
+                    isCo=true;
+                matchInRowCount=listMatchInRow.get(listMatchInRow.size()-1)[1]-listMatchInRow.get(0)[0];
+            }else if(listMatchInRow.size()==1) {
+                matchInRowCount = listMatchInRow.get(0)[1]-listMatchInRow.get(0)[0];
+            }
+            if(matchInRowCount>maxMatchInRowCount){
+                maxMatchInRowCount=matchInRowCount;
+            }
+
+            listMatchInRow.clear();
+        }
+
+        List<Rect> rects = getRectsMathPattern(pixels,width,height,patternColor,false);
+        List<Rect> rectInside = new ArrayList<>();
+        List<Rect> rectOutside = new ArrayList<>();
+        Rect maxRectInside = new Rect();
+        Rect maxRectOutside = new Rect();
+        for (int i = 0; i <rects.size() ; i++) {
+            if(rects.get(i).left>0&&rects.get(i).right<width-1&&rects.get(i).top>0&&rects.get(i).bottom<height-1){
+                rectInside.add(rects.get(i));
+                // Inside number
+                if(((rects.get(i).bottom-rects.get(i).top)*(rects.get(i).right-rects.get(i).left))>(maxRectInside.bottom-maxRectInside.top)*(maxRectInside.right-maxRectInside.left)){
+                    maxRectInside = rects.get(i);
+                }
+            }else {
+                Rect rect =rects.get(i);
+                if(rect.left>=0&&rect.right>=0&&rect.top>=0&&rect.bottom>=0){
+                    rectOutside.add(rects.get(i));
+                    if(((rects.get(i).bottom-rects.get(i).top)*(rects.get(i).right-rects.get(i).left))>(maxRectOutside.bottom-maxRectOutside.top)*(maxRectOutside.right-maxRectOutside.left)){
+                        maxRectOutside = rects.get(i);
+                    }
+
+
+                }
+            }
+
+        }
+
+
+        if(rectInside.size()>0){
+            return Suit.SuitType.NotDetect;
+        }
+        if(isCo){
+            return Suit.SuitType.Co;
+        }
+        if(rectOutside.size()==4){
+            if((listMatch.get(listMatch.size()-1)[1]-listMatch.get(listMatch.size()-1)[0])*4<width) {
+                return Suit.SuitType.Ro;
+            }else {
+                if(isChuon){
+                    return Suit.SuitType.Chuon;
+                }else {
+                    return Suit.SuitType.Bich;
+                }
             }
         }
-//        return "";
+        return Suit.SuitType.NotDetect;
+    }
+    public List<Card> getCardsZoneBitmap(Bitmap baseBitmap , Rect zoneContainCardsZone,int patternColum,int patternZone){
+        List<Card> cardsInZone = new ArrayList<>();
+        List<Rect> getCards = getRectsMathPattern(baseBitmap,patternZone,false);
+
+        String number ="";
+        Suit.SuitType suitType = Suit.SuitType.NotDetect;
+        for (Rect rect:
+                getCards) {
+
+            // Lá bài có độ rộng lớn hơn 10 và độ cao lớn 10
+            if(rect.right-rect.left>=10 && rect.bottom-rect.top>10) {
+                number = "";
+                suitType = Suit.SuitType.NotDetect;
+                Bitmap bitmap = Bitmap.createBitmap(baseBitmap, rect.left, rect.top, (rect.right - rect.left)+1, (rect.bottom - rect.top)+1);
+                List<Rect> numberAndSuit = getRectsMathPattern(bitmap,150,true);
+                if(numberAndSuit.size()>0) {
+                    outsideloop:
+                    for (int i = 0; i <numberAndSuit.size() ; i++) {
+                        Rect rect1 = numberAndSuit.get(i);
+                        Rect rect2 = numberAndSuit.get(i);
+                        if (rect1.right - rect1.left > 0 && rect1.bottom - rect1.top > 0) {
+                            Bitmap bitmap2 = Bitmap.createBitmap(bitmap, rect1.left, rect1.top, (rect1.right - rect1.left)+1, (rect1.bottom - rect1.top)+1);
+                            int[] pixels = new int[bitmap2.getWidth() * bitmap2.getHeight()];
+                            bitmap2.getPixels(pixels, 0, bitmap2.getWidth(),
+                                    0, 0, bitmap2.getWidth(), bitmap2.getHeight());
+                            if(i==0){
+
+                                number =checkNumber(pixels,150,true,bitmap2.getWidth(),bitmap2.getHeight());
+//                                Log.d("nhatnhat", ": "+number);
+//                                if(!number.equals("Not Detected")){
+//                                    Card card2 = new Card();
+//                                    Level level2 = new Level("null", null, bitmap2.getWidth(), bitmap2.getHeight(), bitmap2);
+//                                    card2.setCardLevel(level2);
+//                                    cardsInZone.add(card2);
+//                                }
+                            }
+                            else {
+                                if(!number.equals("Not Detected")&&!number.equals("")){
+                                        if(bitmap2.getWidth()<10||bitmap2.getHeight()<10){
+                                            bitmap2 = Bitmap.createScaledBitmap(bitmap2,5,5,false);
+                                            pixels = new int[bitmap2.getWidth() * bitmap2.getHeight()];
+                                            bitmap2.getPixels(pixels, 0, bitmap2.getWidth(),
+                                                    0, 0, bitmap2.getWidth(), bitmap2.getHeight());
+                                        }
+                                       suitType =checkSuit(pixels,150,true,bitmap2.getWidth(),bitmap2.getHeight());
+//                                    Card card2 = new Card();
+//                                    Level level2 = new Level("null", null, bitmap.getWidth(), bitmap.getHeight(), bitmap);
+//                                    card2.setCardLevel(level2);
+//                                    cardsInZone.add(card2);
+                                    Log.d("checksuit", ""+number+"/"+suitType);
+                                    if(suitType!= Suit.SuitType.NotDetect){
+                                        Card card2 = new Card();
+                                        Level level2 = new Level("null", null, bitmap2.getWidth(), bitmap2.getHeight(), bitmap2);
+                                        card2.setCardLevel(level2);
+                                        cardsInZone.add(card2);
+                                        break outsideloop;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+//                if(isCard){
+//                    Card card = new Card();
+//                    Level level = new Level("null", null, bitmap.getWidth(), bitmap.getHeight(), bitmap);
+//                    card.setCardLevel(level);
+//                    cardsInZone.add(card);
+//                }
+
+            }
+        }
+        return cardsInZone;
+
 
     }
 
@@ -860,14 +711,10 @@ public class GetCardDataManager {
                 if (i > numberRect.bottom)
                     numberRect.bottom = i;
                 coverImageIntArray1D[j + i * width] = -1;
-//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i - 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i);
-//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j - 1, i + 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j, i - 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j, i + 1);
-//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i - 1);
                 followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i);
-//                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i + 1);
             }
         }else {
 
@@ -895,42 +742,6 @@ public class GetCardDataManager {
 //                followPath(numberRect, PatternZone,lessThanPattern, coverImageIntArray1D, width, height, j + 1, i + 1);
             }
         }
-
-    }
-
-    public Rect getCardsZoneFromBitmap(Bitmap bitmap,int patternRedColor){
-        int[] coverImageIntArray1D = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(coverImageIntArray1D, 0, bitmap.getWidth(),
-                0, 0, bitmap.getWidth(), bitmap.getHeight());
-        Rect cardsZone = new Rect();
-        cardsZone.left =0;
-        outerloop:
-        for (int i = 0; i < bitmap.getHeight(); i++) {
-            for (int j = 0; j < bitmap.getWidth(); j++) {
-                int pixel = coverImageIntArray1D[j + i * bitmap.getWidth()];
-                if(Color.red(pixel)>patternRedColor){
-                    if(cardsZone.left==0){
-                        cardsZone.left=j;
-                        cardsZone.top =i;
-                        break outerloop;
-                    }
-                }
-            }
-        }
-
-
-        outerloop:
-        for (int i = bitmap.getHeight()-1; i >=0; i--) {
-            for (int j = bitmap.getWidth()-1; j>=0; j--) {
-                int pixel = coverImageIntArray1D[j + i * bitmap.getWidth()];
-                if(Color.red(pixel)>patternRedColor){
-                    cardsZone.right = j;
-                    cardsZone.bottom =i;
-                    break outerloop;
-                }
-            }
-        }
-        return cardsZone;
 
     }
 
@@ -1002,20 +813,7 @@ public class GetCardDataManager {
     }
 
 
-    private InputImage getRecongnizerImage(Bitmap baseBitmap) {
-       return InputImage.fromBitmap(baseBitmap, 0);
-    }
-
-    private Bitmap getResizeBitmap(Bitmap baseBitmap) {
-        double ratio = baseBitmap.getWidth()/ baseBitmap.getHeight();
-        Log.d("nhatnhat", "getResizeBitmap: "+baseBitmap.getWidth()+"/"+baseBitmap.getHeight()+"/"+ratio);
-        return Bitmap.createScaledBitmap(baseBitmap, BITMAPWIDTH, (int) (BITMAPWIDTH / ratio), false);
-    }
 
 
-    public interface GetCardDataFromBitmapListener{
-        void onGetDataCompleted(List<Card> cards);
-        void onGetDataFailed(String error);
-    }
 
 }
