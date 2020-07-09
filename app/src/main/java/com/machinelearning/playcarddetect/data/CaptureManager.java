@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect;
+package com.machinelearning.playcarddetect.data;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -23,15 +23,10 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import java.io.File;
 import java.nio.ByteBuffer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 
 /**

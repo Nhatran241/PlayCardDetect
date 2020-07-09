@@ -1,34 +1,34 @@
 {
   "project_info": {
-    "project_number": "776616001354",
-    "firebase_url": "https://playcarddetects.firebaseio.com",
-    "project_id": "playcarddetects",
-    "storage_bucket": "playcarddetects.appspot.com"
+    "project_number": "879412328014",
+    "firebase_url": "https://playingcardserver-36cbf.firebaseio.com",
+    "project_id": "playingcardserver-36cbf",
+    "storage_bucket": "playingcardserver-36cbf.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:776616001354:android:a9fbe517d0a8879b61cbb3",
+        "mobilesdk_app_id": "1:879412328014:android:4091b8066035718db2f51f",
         "android_client_info": {
           "package_name": "com.machinelearning.playcarddetect"
         }
       },
       "oauth_client": [
         {
-          "client_id": "776616001354-sds70tamnes0a4ic41aclhnvtqa0trs8.apps.googleusercontent.com",
+          "client_id": "879412328014-11tvafparhpbj9rq4pal9in4fq3jovlk.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDLzZjGAUgvm58Yxa120Py94d8tGjWPhfk"
+          "current_key": "AIzaSyAwHOz9KcKQlHY1rp4s-Th3pmN0GIv2lWI"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "776616001354-sds70tamnes0a4ic41aclhnvtqa0trs8.apps.googleusercontent.com",
+              "client_id": "879412328014-11tvafparhpbj9rq4pal9in4fq3jovlk.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

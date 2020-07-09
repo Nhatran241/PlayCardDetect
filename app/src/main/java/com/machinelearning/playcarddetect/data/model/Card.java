@@ -1,14 +1,20 @@
-package com.machinelearning.playcarddetect.data.card;
+package com.machinelearning.playcarddetect.data.model;
 
-import android.graphics.Bitmap;
 import android.graphics.Rect;
 
 public class Card {
-  private Level cardLevel;
+  private String cardLevel;
   private Suit cardsuit;
   private Rect cardRect;
 
-    public Card(Level cardLevel, Suit cardsuit, Rect cardRect) {
+    public enum Suit {
+        Co,
+        Ro,
+        Chuon,
+        Bich,
+        NotDetect
+    }
+    public Card(String cardLevel, Suit cardsuit, Rect cardRect) {
         this.cardLevel = cardLevel;
         this.cardsuit = cardsuit;
         this.cardRect = cardRect;
@@ -25,11 +31,11 @@ public class Card {
 
 
 
-    public Level getCardLevel() {
+    public String getCardLevel() {
         return cardLevel;
     }
 
-    public void setCardLevel(Level cardLevel) {
+    public void setCardLevel(String cardLevel) {
         this.cardLevel = cardLevel;
     }
 
