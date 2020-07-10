@@ -24,6 +24,7 @@ import com.machinelearning.playcarddetect.data.CaptureManager;
 import com.machinelearning.playcarddetect.R;
 import com.machinelearning.playcarddetect.data.model.Card;
 import com.machinelearning.playcarddetect.data.GetCardDataManager;
+import com.machinelearning.playcarddetect.server.ClientManager;
 import com.machinelearning.playcarddetect.server.ClientServerManager;
 import com.machinelearning.playcarddetect.ui.base.BaseActivity;
 
@@ -42,6 +43,8 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
     private RelativeLayout rect;
     private WindowManager.LayoutParams params;
     private WindowManager.LayoutParams params_rect;
+    private boolean canTakeScreenshot =true;
+    private long start ;
 
 
     @Override
@@ -52,34 +55,42 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
 
     }
 
+
     @Override
     protected void PrepareServer() {
         showDialogLoading();
-        ClientServerManager.getInstance().prepareClientServer(this,false, new ClientServerManager.IClientPrepareListener() {
-            @Override
-            public void OnPrepareClientServerSuccess() {
-                dismisDialogLoading();
-                /**
-                 * Chuẩn bị quá trình chụp ảnh
-                 */
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (!Settings.canDrawOverlays(ClientActivity.this)) {
-                        Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                        startActivityForResult(myIntent,OVERLAY);
-                    }else {
-                        requestCapture();
-                    }
-                }
+//        ClientServerManager.getInstance().prepareClientServer(this,false, new ClientServerManager.IClientPrepareListener() {
+//            @Override
+//            public void OnPrepareClientServerSuccess() {
+//                dismisDialogLoading();
+//                /**
+//                 * Chuẩn bị quá trình chụp ảnh
+//                 */
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                    if (!Settings.canDrawOverlays(ClientActivity.this)) {
+//                        Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+//                        startActivityForResult(myIntent,OVERLAY);
+//                    }else {
+//                        requestCapture();
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void OnPrepareClientServerFail(String error) {
+//                Toast.makeText(ClientActivity.this, ""+error, Toast.LENGTH_SHORT).show();
+//                dismisDialogLoading();
+//            }
+//
+//        });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(ClientActivity.this)) {
+                Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                startActivityForResult(myIntent,OVERLAY);
+            }else {
+                requestCapture();
             }
-
-            @Override
-            public void OnPrepareClientServerFail(String error) {
-                Toast.makeText(ClientActivity.this, ""+error, Toast.LENGTH_SHORT).show();
-                dismisDialogLoading();
-            }
-
-        });
-
+        }
     }
 
 
@@ -92,10 +103,14 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
 
             @Override
             public void run() {
-                captureManager.takeScreenshot();
+                if(canTakeScreenshot) {
+                    canTakeScreenshot=false;
+
+                    captureManager.takeScreenshot();
+                }
             }
 
-        }, 0, 4000);//Update text every second
+        }, 0, 1000);//Update text every second
 
     }
 
@@ -107,8 +122,10 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
             @Override
             public void onResult(boolean isGranted) {
                 if (isGranted) {
-                    chatHeadView();
+                    captureManager.init(ClientActivity.this);
+//                    captureManager.takeScreenshot();
 //                    initTimer();
+                    chatHeadView();
                 } else {
                     captureManager.requestScreenshotPermission(ClientActivity.this, REQUESTCAPTURE);
                 }
@@ -132,6 +149,7 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
         overlayIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("takescreenshot", "onClick: "+System.currentTimeMillis());
                 captureManager.takeScreenshot();
             }
         });
@@ -216,35 +234,48 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
         /**
          * Phân tích lá bài từ ảnh chụp
          */
-        Rect cardsInHandZone = new Rect();
-//        currentCardsTableZone.top = 170;
-//        currentCardsTableZone.left= 150;
-//        currentCardsTableZone.right=580;
-//        currentCardsTableZone.bottom = 270;
+        if(canTakeScreenshot) {
+            canTakeScreenshot=false;
+            long start =System.currentTimeMillis();
+            ClientManager.getInstance().process(bitmap, new ClientManager.ClientManagerListener() {
+                @Override
+                public void OnCurrentPosition(ClientManager.CurrentPosition currentPosition) {
+//                captureManager.takeScreenshot();
+//                    Log.d("nhatnhat", "OnCurrentPosition: "+currentPosition+"/"+(System.currentTimeMillis()-start));
+                    canTakeScreenshot=true;
+                }
+            });
+        }
 
-//        showDialogLoading();
-        List<Card> listCardsInHand = new ArrayList<>();
-        long start = System.currentTimeMillis();
-        listCardsInHand.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,cardsInHandZone,220,230));
-        Log.d("nhatnhat", "time: "+(System.currentTimeMillis()-start));
-
-        /**
-         * Đẩy dữ liệu lên server
-         */
-        ClientServerManager.getInstance().putClientHandCards(listCardsInHand, new ClientServerManager.IClientPutValueListener() {
-            @Override
-            public void OnClientPutValueSuccess() {
-//                dismisDialogLoading();
-                Log.d("nhatnhat", "OnClientPutValueSuccess: ");
-            }
-
-            @Override
-            public void OnClientPutValueFail(String error) {
-//                dismisDialogLoading();
-
-                Log.d("nhatnhat", "OnClientPutValueFail: "+error.toString());
-            }
-        });
+//        Rect cardsInHandZone = new Rect();
+////        currentCardsTableZone.top = 170;
+////        currentCardsTableZone.left= 150;
+////        currentCardsTableZone.right=580;
+////        currentCardsTableZone.bottom = 270;
+//
+////        showDialogLoading();
+//        List<Card> listCardsInHand = new ArrayList<>();
+//        long start = System.currentTimeMillis();
+//        listCardsInHand.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,cardsInHandZone,220,230));
+//        Log.d("nhatnhat", "time: "+(System.currentTimeMillis()-start));
+//
+//        /**
+//         * Đẩy dữ liệu lên server
+//         */
+//        ClientServerManager.getInstance().putClientHandCards(listCardsInHand, new ClientServerManager.IClientPutValueListener() {
+//            @Override
+//            public void OnClientPutValueSuccess() {
+////                dismisDialogLoading();
+//                Log.d("nhatnhat", "OnClientPutValueSuccess: ");
+//            }
+//
+//            @Override
+//            public void OnClientPutValueFail(String error) {
+////                dismisDialogLoading();
+//
+//                Log.d("nhatnhat", "OnClientPutValueFail: "+error.toString());
+//            }
+//        });
 
 
 

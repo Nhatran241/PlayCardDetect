@@ -5,6 +5,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,9 +34,9 @@ public class AdminActivity extends BaseActivity {
         rv_third = findViewById(R.id.rv_thirdClient);
         rv_enemy = findViewById(R.id.rv_enemy);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-
-        rv_first.setLayoutManager(layoutManager);
+//        LinearLayoutManager layoutManager = new LinearLayoutManager/(this, LinearLayoutManager.HORIZONTAL, false);
+        rv_first.setLayoutManager(new GridLayoutManager(this, 13));
+//        rv_first.setLayoutManager(layoutManager);
     }
 
     @Override

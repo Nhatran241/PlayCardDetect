@@ -48,11 +48,11 @@ dependencies {
     /** machine learning kit */
 
 
-    implementation 'com.google.firebase:firebase-firestore:21.4.3'
+    implementation 'com.google.firebase:firebase-firestore:21.5.0'
+
 
 
     // Object detection and tracking feature with custom classifier
-    implementation 'com.google.mlkit:object-detection-custom:16.0.0'
-    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:16.0.0'
+    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:16.1.0'
 
 }

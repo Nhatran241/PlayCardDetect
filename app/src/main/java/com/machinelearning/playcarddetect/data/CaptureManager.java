@@ -49,6 +49,7 @@ public class CaptureManager {
     onBitmapListener onBitmapListener;
     Image image;
 
+
     public static CaptureManager getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new CaptureManager();
@@ -119,8 +120,8 @@ public class CaptureManager {
             final Point size = new Point();
             display.getRealSize(size);
 //            if(width<height) {
-                width = 1080;
-                height = 720;
+                width = 640;
+                height = 480;
 //            }else {
 //                width = ;
 //                height = size.x;
@@ -132,8 +133,8 @@ public class CaptureManager {
             @SuppressLint("StaticFieldLeak")
             @Override
             public void onImageAvailable(final ImageReader reader) {
-                Log.d("nhatnhat", "onImageAvailable: ");
                 new AsyncTask<Void, Void, Bitmap>() {
+
                     @Override
                     protected Bitmap doInBackground(final Void... params) {
                         Bitmap bitmap = null;
@@ -146,18 +147,18 @@ public class CaptureManager {
 
                                 bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
                                 bitmap.copyPixelsFromBuffer(buffer);
-                                Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                                Canvas c = new Canvas(bmpGrayscale);
-                                Paint paint = new Paint();
-                                ColorMatrix cm = new ColorMatrix();
-                                cm.setSaturation(0);
-                                ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
-                                paint.setColorFilter(f);
-                                c.drawBitmap(bitmap, 0, 0, paint);
-                                bitmap.recycle();
-                                virtualDisplay.release();
+//                                Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+//                                Canvas c = new Canvas(bmpGrayscale);
+//                                Paint paint = new Paint();
+//                                ColorMatrix cm = new ColorMatrix();
+//                                cm.setSaturation(0);
+//                                ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+//                                paint.setColorFilter(f);
+//                                c.drawBitmap(bitmap, 0, 0, paint);
+//                                bitmap.recycle();
+//                                virtualDisplay.release();
                                 image.close();
-                                return bmpGrayscale;
+                                return bitmap;
                             }
                         } catch (Exception e) {
                             Log.d("nhatnhat", "doInBackground: " + e.toString());
@@ -182,8 +183,9 @@ public class CaptureManager {
 //                            if (onSavedImageListener != null)
 //                                onSavedImageListener.onSavedFailed();
                             onBitmapListener.onBitmapReady(bitmap);
-                        }
 
+                            Log.d("nhatnhat", "takeScreenshot Finish: ");
+                        }
 
                     }
                 }.execute();
@@ -195,12 +197,12 @@ public class CaptureManager {
         }
 
     public void takeScreenshot() {
-        Log.d("nhatnhat", "takeScreenshot: ");
-        try {
-            virtualDisplay = mediaProjection.createVirtualDisplay(SCREENCAP_NAME, width, height, density, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, imageReader.getSurface(), null, null);
-        } catch (SecurityException e) {
-            if (onSavedImageListener != null) onSavedImageListener.onNoPermission();
-        }
+            Log.d("nhatnhat", "takeScreenshot: ");
+            try {
+                virtualDisplay = mediaProjection.createVirtualDisplay(SCREENCAP_NAME, width, height, density, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, imageReader.getSurface(), null, null);
+            } catch (SecurityException e) {
+                if (onSavedImageListener != null) onSavedImageListener.onNoPermission();
+            }
 
     }
 

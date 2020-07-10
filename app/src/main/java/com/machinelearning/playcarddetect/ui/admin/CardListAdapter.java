@@ -1,15 +1,18 @@
 package com.machinelearning.playcarddetect.ui.admin;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.machinelearning.playcarddetect.R;
 import com.machinelearning.playcarddetect.data.model.Card;
+import com.machinelearning.playcarddetect.ui.view.CardImageView;
 
 import java.util.List;
 
@@ -18,10 +21,12 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.ViewHo
     private List<Card> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
+    private Activity context;
 
     // data is passed into the constructor
     public CardListAdapter(Activity context, List<Card> data) {
         this.mInflater = LayoutInflater.from(context);
+        this.context = context;
         this.mData = data;
     }
 
@@ -35,8 +40,13 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.ViewHo
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String cardlevel = mData.get(position).getCardLevel();
-        holder.tvCardLevel.setText(cardlevel);
+        String cardlevel = mData.get(position).getCardLevel().toLowerCase();
+        String cardsuit = mData.get(position).getCardsuit().toString().toLowerCase();
+        Log.d("nhatnhat", "onBindViewHolder: "+"c"+cardlevel+cardsuit);
+        holder.cardImageView.setImageResource(getImageId(context,"c"+cardlevel+cardsuit));
+    }
+    public static int getImageId(Activity context, String imageName) {
+        return context.getResources().getIdentifier("drawable/" + imageName, null, context.getPackageName());
     }
 
     // total number of rows
@@ -48,11 +58,11 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.ViewHo
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView tvCardLevel;
+        ImageView cardImageView;
 
         ViewHolder(View itemView) {
             super(itemView);
-            tvCardLevel = itemView.findViewById(R.id.tv_cardlevel);
+            cardImageView = itemView.findViewById(R.id.iv_card);
             itemView.setOnClickListener(this);
         }
 
