@@ -119,90 +119,89 @@ public class CaptureManager {
             final Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
             final Point size = new Point();
             display.getRealSize(size);
+            if(size.x>size.y) {
 //            if(width<height) {
-                width = 640;
-                height = 480;
+                width = size.x;
+                height = size.y;
+            }else {
+                width = size.y;
+                height = size.x;
+            }
 //            }else {
 //                width = ;
 //                height = size.x;
 //            }
 
         imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
-        Log.d("nhatnhat", "1");
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @SuppressLint("StaticFieldLeak")
             @Override
             public void onImageAvailable(final ImageReader reader) {
-                new AsyncTask<Void, Void, Bitmap>() {
 
-                    @Override
-                    protected Bitmap doInBackground(final Void... params) {
-                        Bitmap bitmap = null;
-                        try {
-                            image = reader.acquireNextImage();
-                            if (image != null) {
-                                Image.Plane[] planes = image.getPlanes();
-                                ByteBuffer buffer = planes[0].getBuffer();
-                                int pixelStride = planes[0].getPixelStride(), rowStride = planes[0].getRowStride(), rowPadding = rowStride - pixelStride * width;
+                Log.d("nhatnhat", "screen state change -> take screenshot: ");
+                    new AsyncTask<Void, Void, Bitmap>() {
 
-                                bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
-                                bitmap.copyPixelsFromBuffer(buffer);
-//                                Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-//                                Canvas c = new Canvas(bmpGrayscale);
-//                                Paint paint = new Paint();
-//                                ColorMatrix cm = new ColorMatrix();
-//                                cm.setSaturation(0);
-//                                ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
-//                                paint.setColorFilter(f);
-//                                c.drawBitmap(bitmap, 0, 0, paint);
+                        @Override
+                        protected Bitmap doInBackground(final Void... params) {
+                            Bitmap bitmap = null;
+
+                                if (image != null) {
+                                    Image.Plane[] planes = image.getPlanes();
+                                    ByteBuffer buffer = planes[0].getBuffer();
+                                    int pixelStride = planes[0].getPixelStride(), rowStride = planes[0].getRowStride(), rowPadding = rowStride - pixelStride * width;
+
+                                    bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
+                                    bitmap.copyPixelsFromBuffer(buffer);
+                                    Bitmap newbitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
+                                    bitmap.recycle();
+//                                    reader.close();
+//                                    return newbitmap;
+                                Bitmap bmpGrayscale = Bitmap.createBitmap(width/4, height/4, Bitmap.Config.ARGB_8888);
+                                Canvas c = new Canvas(bmpGrayscale);
+                                Paint paint = new Paint();
+                                ColorMatrix cm = new ColorMatrix();
+                                cm.setSaturation(0);
+                                ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+                                paint.setColorFilter(f);
+                                c.drawBitmap(newbitmap, 0, 0, paint);
 //                                bitmap.recycle();
 //                                virtualDisplay.release();
-                                image.close();
-                                return bitmap;
-                            }
-                        } catch (Exception e) {
-                            Log.d("nhatnhat", "doInBackground: " + e.toString());
-                            if (bitmap != null)
-                                bitmap.recycle();
-//                                if (reader != null)
-//                                    reader.close();
-                            e.printStackTrace();
-                        }
+                                    image.close();
+                                    return bmpGrayscale;
+                                }
+
 //                        if (image != null)
 //                            image.close();
 //                            if (reader != null) {
 //                                reader.close();
 //                            }
-                        return null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(final Bitmap bitmap) {
-                        super.onPostExecute(bitmap);
-                        if (bitmap != null) {
-//                            if (onSavedImageListener != null)
-//                                onSavedImageListener.onSavedFailed();
-                            onBitmapListener.onBitmapReady(bitmap);
-
-                            Log.d("nhatnhat", "takeScreenshot Finish: ");
+                            return null;
                         }
 
-                    }
-                }.execute();
+                        @Override
+                        protected void onPostExecute(final Bitmap bitmap) {
+                            super.onPostExecute(bitmap);
+//                            if (onSavedImageListener != null)
+//                                onSavedImageListener.onSavedFailed();
+                                onBitmapListener.onBitmapReady(bitmap);
+
+                        }
+                    }.execute();
+
             }
         }, null);
 
-
+        try {
+            virtualDisplay = mediaProjection.createVirtualDisplay(SCREENCAP_NAME, width, height, density, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, imageReader.getSurface(), null, null);
+        } catch (SecurityException e) {
+            if (onSavedImageListener != null) onSavedImageListener.onNoPermission();
+        }
 //        mediaProjection.registerCallback(callback, null);
         }
 
     public void takeScreenshot() {
-            Log.d("nhatnhat", "takeScreenshot: ");
-            try {
-                virtualDisplay = mediaProjection.createVirtualDisplay(SCREENCAP_NAME, width, height, density, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, imageReader.getSurface(), null, null);
-            } catch (SecurityException e) {
-                if (onSavedImageListener != null) onSavedImageListener.onNoPermission();
-            }
+        canTakeImage=true;
+            image = imageReader.acquireNextImage();
 
     }
 
