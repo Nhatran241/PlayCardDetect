@@ -486,6 +486,7 @@ public class GetCardDataManager {
                                  * Giá trị của lá bài (Level) luôn năm ở vị trí đầu tiên trong list các Rect lấy đc từ lá bài
                                  */
                                 number =checkNumber(cardBitmap,numberAndSuitRect,patternCard,true);
+                                Log.d("checksuitsssss", "getCardsZoneBitmap: "+number);
                             }
                             else {
                                 if(!number.equals("Not Detected")&&!number.equals("")){

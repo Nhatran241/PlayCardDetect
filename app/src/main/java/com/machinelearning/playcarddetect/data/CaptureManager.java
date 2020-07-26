@@ -150,20 +150,18 @@ public class CaptureManager {
                                     ByteBuffer buffer = planes[0].getBuffer();
                                     int pixelStride = planes[0].getPixelStride(), rowStride = planes[0].getRowStride(), rowPadding = rowStride - pixelStride * width;
 
+
                                     bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
                                     bitmap.copyPixelsFromBuffer(buffer);
-                                    Bitmap newbitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
+                                    Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                                    Canvas c = new Canvas(bmpGrayscale);
+                                    Paint paint = new Paint();
+                                    ColorMatrix cm = new ColorMatrix();
+                                    cm.setSaturation(0);
+                                    ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+                                    paint.setColorFilter(f);
+                                    c.drawBitmap(bitmap, 0, 0, paint);
                                     bitmap.recycle();
-//                                    reader.close();
-//                                    return newbitmap;
-                                Bitmap bmpGrayscale = Bitmap.createBitmap(width/4, height/4, Bitmap.Config.ARGB_8888);
-                                Canvas c = new Canvas(bmpGrayscale);
-                                Paint paint = new Paint();
-                                ColorMatrix cm = new ColorMatrix();
-                                cm.setSaturation(0);
-                                ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
-                                paint.setColorFilter(f);
-                                c.drawBitmap(newbitmap, 0, 0, paint);
 //                                bitmap.recycle();
 //                                virtualDisplay.release();
                                     image.close();

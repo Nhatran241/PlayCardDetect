@@ -69,13 +69,13 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
     @Override
     protected void PrepareServer() {
         showDialogLoading();
-//        ClientServerManager.getInstance().prepareClientServer(this,false, new ClientServerManager.IClientPrepareListener() {
-//            @Override
-//            public void OnPrepareClientServerSuccess() {
-//                dismisDialogLoading();
-//                /**
-//                 * Chuẩn bị quá trình chụp ảnh
-//                 */
+        ClientServerManager.getInstance().prepareClientServer(this,false, new ClientServerManager.IClientPrepareListener() {
+            @Override
+            public void OnPrepareClientServerSuccess() {
+                dismisDialogLoading();
+                /**
+                 * Chuẩn bị quá trình chụp ảnh
+                 */
 //                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 //                    if (!Settings.canDrawOverlays(ClientActivity.this)) {
 //                        Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
@@ -84,15 +84,15 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
 //                        requestCapture();
 //                    }
 //                }
-//            }
-//
-//            @Override
-//            public void OnPrepareClientServerFail(String error) {
-//                Toast.makeText(ClientActivity.this, ""+error, Toast.LENGTH_SHORT).show();
-//                dismisDialogLoading();
-//            }
-//
-//        });
+            }
+
+            @Override
+            public void OnPrepareClientServerFail(String error) {
+                Toast.makeText(ClientActivity.this, ""+error, Toast.LENGTH_SHORT).show();
+                dismisDialogLoading();
+            }
+
+        });
         Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
 //        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivityForResult(intent,REQUESTACCESSIBILITY);
@@ -109,14 +109,10 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
 
             @Override
             public void run() {
-                if(canTakeScreenshot) {
-                    canTakeScreenshot=false;
-
                     captureManager.takeScreenshot();
                 }
-            }
 
-        }, 0, 1000);//Update text every second
+        }, 0, 4000);//Update text every second
 
     }
 
@@ -254,82 +250,91 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
         /**
          * Phân tích lá bài từ ảnh chụp
          */
+
         if(bitmap!=null) {
-            long start = System.currentTimeMillis();
-//            String defaultLocationSDCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator+"real";
-//            try {
-//                SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this,bitmap,System.currentTimeMillis()+"",defaultLocationSDCard,"PNG");
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            List<Rect> list =GetCardDataManager.getInstance().getRectsMathPattern(bitmap,200,false);
-//            Log.d("nhatnhat", "onBitmapReady: "+list.size());
-//            captureManager.takeScreenshot();
-            ClientManager.getInstance().process(bitmap, new ClientManager.ClientManagerListener() {
-                @Override
-                public void OnCurrentPosition(ClientManager.CurrentPosition currentPosition,int[] postion) {
-                    Log.d("nhatnhat", "OnCurrentPosition: " + currentPosition + "/" + (System.currentTimeMillis() - start));
-
-//                    DisplayMetrics displayMetrics = new DisplayMetrics();
-//                    getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-//                    int height = displayMetrics.heightPixels;
-//                    int width = displayMetrics.widthPixels;
-
-//                    if(currentPosition.equals(ClientManager.CurrentPosition.RoomSelect)){
+//            long start = System.currentTimeMillis();
+////            String defaultLocationSDCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator+"real";
+////            try {
+////                SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(this,bitmap,System.currentTimeMillis()+"",defaultLocationSDCard,"PNG");
+////            } catch (Exception e) {
+////                e.printStackTrace();
+////            }
+////            List<Rect> list =GetCardDataManager.getInstance().getRectsMathPattern(bitmap,200,false);
+////            Log.d("nhatnhat", "onBitmapReady: "+list.size());
+////            captureManager.takeScreenshot();
+//            ClientManager.getInstance().process(bitmap, new ClientManager.ClientManagerListener() {
+//                @Override
+//                public void OnCurrentPosition(ClientManager.CurrentPosition currentPosition,int[] postion) {
+//                    Log.d("nhatnhat", "OnCurrentPosition: " + currentPosition + "/" + (System.currentTimeMillis() - start));
 //
-////                        Log.d("nhatnhat", "OnCurrentPosition: "+height+"/"+width+":"+postion[0]+"/"+postion[1]);
-////                        if(height>width) {
-////                            postion[0] = (int) ((postion[0] * 1.0 / bitmap.getWidth()) * height);
-////                            postion[1] = (int) ((postion[1] * 1.0 / bitmap.getHeight()) * width);
-////                        }else {
-////                            postion[0] = (int) ((postion[0] * 1.0 / bitmap.getWidth()) * width);
-////                            postion[1] = (int) ((postion[1] * 1.0 / bitmap.getHeight()) * height);
-////                        }
-//                        Intent intent = new Intent(ClientActivity.this, RemoteService.class);
-//                        intent.putExtra(Cons.Action,Cons.RemoteClick);
-//                        intent.putExtra(Cons.RemoteClick,postion);
-//                        startService(intent);
-//                    }
-                    captureManager.takeScreenshot();
+////                    DisplayMetrics displayMetrics = new DisplayMetrics();
+////                    getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+////                    int height = displayMetrics.heightPixels;
+////                    int width = displayMetrics.widthPixels;
+//
+////                    if(currentPosition.equals(ClientManager.CurrentPosition.RoomSelect)){
+////
+//////                        Log.d("nhatnhat", "OnCurrentPosition: "+height+"/"+width+":"+postion[0]+"/"+postion[1]);
+//////                        if(height>width) {
+//////                            postion[0] = (int) ((postion[0] * 1.0 / bitmap.getWidth()) * height);
+//////                            postion[1] = (int) ((postion[1] * 1.0 / bitmap.getHeight()) * width);
+//////                        }else {
+//////                            postion[0] = (int) ((postion[0] * 1.0 / bitmap.getWidth()) * width);
+//////                            postion[1] = (int) ((postion[1] * 1.0 / bitmap.getHeight()) * height);
+//////                        }
+////                        Intent intent = new Intent(ClientActivity.this, RemoteService.class);
+////                        intent.putExtra(Cons.Action,Cons.RemoteClick);
+////                        intent.putExtra(Cons.RemoteClick,postion);
+////                        startService(intent);
+////                    }
+//                    captureManager.takeScreenshot();
+//
+//                }
+//            });
+//        }else {
+//            captureManager.takeScreenshot();
+//        }
 
-                }
-            });
-        }else {
-            captureManager.takeScreenshot();
-        }
-
-//        Rect cardsInHandZone = new Rect();
+            Rect cardsInHandZone = new Rect();
 ////        currentCardsTableZone.top = 170;
 ////        currentCardsTableZone.left= 150;
 ////        currentCardsTableZone.right=580;
 ////        currentCardsTableZone.bottom = 270;
 //
 ////        showDialogLoading();
-//        List<Card> listCardsInHand = new ArrayList<>();
-//        long start = System.currentTimeMillis();
-//        listCardsInHand.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap,cardsInHandZone,220,230));
-//        Log.d("nhatnhat", "time: "+(System.currentTimeMillis()-start));
-//
-//        /**
-//         * Đẩy dữ liệu lên server
-//         */
-//        ClientServerManager.getInstance().putClientHandCards(listCardsInHand, new ClientServerManager.IClientPutValueListener() {
-//            @Override
-//            public void OnClientPutValueSuccess() {
-////                dismisDialogLoading();
-//                Log.d("nhatnhat", "OnClientPutValueSuccess: ");
-//            }
-//
-//            @Override
-//            public void OnClientPutValueFail(String error) {
-////                dismisDialogLoading();
-//
-//                Log.d("nhatnhat", "OnClientPutValueFail: "+error.toString());
-//            }
-//        });
+            List<Card> listCardsInHand = new ArrayList<>();
+            long start = System.currentTimeMillis();
+            listCardsInHand.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap, cardsInHandZone, 220, 230));
+            bitmap.recycle();
+            Log.d("nhatnhat",  listCardsInHand.size()+"");
+
+            /**
+             * Đẩy dữ liệu lên server
+             */
+            if(listCardsInHand.size()>0) {
+                ClientServerManager.getInstance().putClientHandCards(listCardsInHand, new ClientServerManager.IClientPutValueListener() {
+                    @Override
+                    public void OnClientPutValueSuccess() {
+//                dismisDialogLoading();
+                        Log.d("nhatnhat", "OnClientPutValueSuccess: ");
+                        captureManager.takeScreenshot();
+                    }
+
+                    @Override
+                    public void OnClientPutValueFail(String error) {
+//                dismisDialogLoading();
+                        captureManager.takeScreenshot();
+
+                        Log.d("nhatnhat", "OnClientPutValueFail: " + error.toString());
+                    }
+                });
+            }else {
+
+                captureManager.takeScreenshot();
+            }
 
 
-
+        }
     }
 
 
