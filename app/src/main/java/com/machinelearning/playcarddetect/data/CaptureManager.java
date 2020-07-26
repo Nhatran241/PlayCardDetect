@@ -119,19 +119,10 @@ public class CaptureManager {
             final Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
             final Point size = new Point();
             display.getRealSize(size);
-            if(size.x>size.y) {
+        display.getRealSize(size);
 //            if(width<height) {
-                width = size.x;
-                height = size.y;
-            }else {
-                width = size.y;
-                height = size.x;
-            }
-//            }else {
-//                width = ;
-//                height = size.x;
-//            }
-
+        width = 1080;
+        height = 720;
         imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @SuppressLint("StaticFieldLeak")
@@ -198,7 +189,6 @@ public class CaptureManager {
         }
 
     public void takeScreenshot() {
-        canTakeImage=true;
             image = imageReader.acquireNextImage();
 
     }
@@ -237,6 +227,7 @@ public class CaptureManager {
     public interface onBitmapListener{
         void onBitmapReady(Bitmap bitmap);
     }
+
     public interface onGrantedPermissionListener {
         void onResult(boolean isGranted);
     }

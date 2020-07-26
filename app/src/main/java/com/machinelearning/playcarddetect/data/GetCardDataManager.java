@@ -41,6 +41,7 @@ public class GetCardDataManager {
                 int pixel = pixelsOfNumber[j + i * width];
                 if(lessThan) {
                     if (Color.red(pixel) <patternColor){
+                        row+= "0";
                         if(matchInRow[0]==-1){
                             matchInRow[0]=j;
                             matchInRow[1]=j;
@@ -52,6 +53,8 @@ public class GetCardDataManager {
                             listMatch.add(matchInRow);
                         }
                     }else {
+
+                        row+= "1";
                         if(matchInRow[0]!=-1){
                             listMatch.add(matchInRow);
                             listMatchInRow.add(matchInRow);
@@ -66,6 +69,7 @@ public class GetCardDataManager {
                     }
                 }
             }
+            Log.d("numberview", ": "+row);
             int matchInRowCount=0;
             if(listMatchInRow.size()>1){
                 if(listMatchInRow.size()==2&&listMatchInRow.size()==listMatch.size()){
@@ -467,6 +471,7 @@ public class GetCardDataManager {
              * Nếu là lá bài thì chiều dài và rộng phải lớn hơn ít 10 rất nhiều
              */
             if(cardRect.right-cardRect.left>=10 && cardRect.bottom-cardRect.top>10) {
+
                 number = "";
                 suitType = Card.Suit.NotDetect;
                 /**
@@ -576,7 +581,7 @@ public class GetCardDataManager {
             for (int j = 0; j < bitmap.getWidth(); j++) {
                 int pixel = coverImageIntArray1D[j + i * bitmap.getWidth()];
                 if(lessThanPattern) {
-                    if (Color.red(pixel) <= patternRedColor) {
+                    if (Color.red(pixel) <= patternRedColor&&pixel!=-1) {
                         followPath(cardsZone, patternRedColor, true, coverImageIntArray1D, bitmap.getWidth(), bitmap.getHeight(), j, i);
 //                        cardsZone.right+=1;
                         if (cardsZone.right - cardsZone.left > 0 && cardsZone.bottom - cardsZone.top > 0) {
@@ -586,7 +591,7 @@ public class GetCardDataManager {
                         cardsZone.left = -1;
                     }
                 }else {
-                    if (Color.red(pixel) >= patternRedColor) {
+                    if (Color.red(pixel) >= patternRedColor&&pixel!=-1) {
                         followPath(cardsZone, patternRedColor, false, coverImageIntArray1D, bitmap.getWidth(), bitmap.getHeight(), j, i);
 //                        cardsZone.right+=1;
                         if (cardsZone.right - cardsZone.left > 0 && cardsZone.bottom - cardsZone.top > 0) {

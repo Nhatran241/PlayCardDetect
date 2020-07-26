@@ -23,6 +23,7 @@ public class ClientManager {
     private TextRecognizer recognizer ;
 
     public enum CurrentPosition {
+        PLaying,
         MenuGame,
         RoomSelect,
         InsideRoom,
@@ -80,6 +81,12 @@ public class ClientManager {
                                 }
                             }
                         }
+                        }if(text.contains("cuoc")||text.contains("bằn")||text.contains("choi")
+                                ||text.contains("qua")||text.contains("moi")||text.contains("phut")
+                                ||text.contains("ngay")||text.contains("anh")||text.contains("huong")
+                                ||text.contains("xau")||text.contains("den")||text.contains("suc")
+                                ||text.contains("khoe") ||text.contains("3k") ||text.contains("5k")){
+                            clientManagerListener.OnCurrentPosition(CurrentPosition.PLaying,null);
                         }else {
                             clientManagerListener.OnCurrentPosition(CurrentPosition.Undetected,null);
                         }
@@ -89,6 +96,7 @@ public class ClientManager {
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
+                                clientManagerListener.OnCurrentPosition(CurrentPosition.Undetected,null);
                             }
                         });
 
