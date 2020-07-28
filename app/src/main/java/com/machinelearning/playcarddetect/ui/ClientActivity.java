@@ -62,6 +62,8 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
     private boolean canTakeScreenshot =true;
     private long start ;
 
+    private List<Card> listCardInHand = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,42 +77,42 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
     @Override
     protected void PrepareServer() {
         showDialogLoading();
-//        ClientServerManager.getInstance().prepareClientServer(this,false, new ClientServerManager.IClientPrepareListener() {
-//            @Override
-//            public void OnPrepareClientServerSuccess() {
-//                dismisDialogLoading();
-//                /**
-//                 * Chuẩn bị quá trình chụp ảnh
-//                 */
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                    if (!Settings.canDrawOverlays(ClientActivity.this)) {
-//                        Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-//                        startActivityForResult(myIntent,OVERLAY);
-//                    }else {
-//                        requestCapture();
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void OnPrepareClientServerFail(String error) {
-//                Toast.makeText(ClientActivity.this, ""+error, Toast.LENGTH_SHORT).show();
-//                dismisDialogLoading();
-//            }
-//
-//        });
+        ClientServerManager.getInstance().prepareClientServer(this,false, new ClientServerManager.IClientPrepareListener() {
+            @Override
+            public void OnPrepareClientServerSuccess() {
+                dismisDialogLoading();
+                /**
+                 * Chuẩn bị quá trình chụp ảnh
+                 */
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (!Settings.canDrawOverlays(ClientActivity.this)) {
+                        Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                        startActivityForResult(myIntent,OVERLAY);
+                    }else {
+                        requestCapture();
+                    }
+                }
+            }
+
+            @Override
+            public void OnPrepareClientServerFail(String error) {
+                Toast.makeText(ClientActivity.this, ""+error, Toast.LENGTH_SHORT).show();
+                dismisDialogLoading();
+            }
+
+        });
 //        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
 ////        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //        startActivityForResult(intent,REQUESTACCESSIBILITY);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(ClientActivity.this)) {
-                Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                startActivityForResult(myIntent,OVERLAY);
-            }else {
-                requestCapture();
-            }
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            if (!Settings.canDrawOverlays(ClientActivity.this)) {
+//                Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+//                startActivityForResult(myIntent,OVERLAY);
+//            }else {
+//                requestCapture();
+//            }
+//        }
 
     }
 
@@ -314,24 +316,64 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
 //                            e.printStackTrace();
 //                        }
                         listCardsInHand.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(ClientActivity.this,handCardsBitmap, cardsInHandZone, 220, 230));
-//                        bitmapCardHand.recycle();
-//                        if(listCardsInHand.size()>0) {
-//                            ClientServerManager.getInstance().putClientHandCards(listCardsInHand, new ClientServerManager.IClientPutValueListener() {
-//                                @Override
-//                                public void OnClientPutValueSuccess() {
-//                                    captureManager.takeScreenshot();
-//                                }
-//
-//                                @Override
-//                                public void OnClientPutValueFail(String error) {
-//                                    captureManager.takeScreenshot();
-//                                }
-//                            });
-//                        }else {
-//
-//                            captureManager.takeScreenshot();
-//                        }
-                        captureManager.takeScreenshot();
+                        handCardsBitmap.recycle();
+                        if(listCardsInHand.size()>0) {
+                            if(listCardInHand.size() ==0){
+                                listCardInHand.addAll(listCardsInHand);
+                                ClientServerManager.getInstance().putClientHandCards(listCardInHand, new ClientServerManager.IClientPutValueListener() {
+                                @Override
+                                public void OnClientPutValueSuccess() {
+                                    captureManager.takeScreenshot();
+                                }
+
+                                @Override
+                                public void OnClientPutValueFail(String error) {
+                                    Toast.makeText(ClientActivity.this, ""+error, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            }else {
+                                if(listCardsInHand.size()==listCardInHand.size()){
+                                    boolean notMatch=false;
+                                    for (int i = 0; i <listCardsInHand.size() ; i++) {
+                                        if(!listCardsInHand.get(i).getCardLevel().equals(listCardInHand.get(i).getCardLevel())||
+                                        !listCardsInHand.get(i).getCardsuit().equals(listCardInHand.get(i).getCardsuit())){
+                                            notMatch=true;
+                                            break;
+                                        }
+                                    }
+                                    if(notMatch){
+                                        ClientServerManager.getInstance().putClientHandCards(listCardInHand, new ClientServerManager.IClientPutValueListener() {
+                                            @Override
+                                            public void OnClientPutValueSuccess() {
+                                                captureManager.takeScreenshot();
+                                            }
+
+                                            @Override
+                                            public void OnClientPutValueFail(String error) {
+                                                Toast.makeText(ClientActivity.this, "" + error, Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }else {
+                                        captureManager.takeScreenshot();
+                                    }
+
+                                }else {
+                                    listCardInHand.clear();
+                                    listCardInHand.addAll(listCardsInHand);
+                                    ClientServerManager.getInstance().putClientHandCards(listCardInHand, new ClientServerManager.IClientPutValueListener() {
+                                        @Override
+                                        public void OnClientPutValueSuccess() {
+                                            captureManager.takeScreenshot();
+                                        }
+
+                                        @Override
+                                        public void OnClientPutValueFail(String error) {
+                                            Toast.makeText(ClientActivity.this, "" + error, Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                                }
+                            }
+                        }else captureManager.takeScreenshot();
 
                     }else {
                         captureManager.takeScreenshot();
