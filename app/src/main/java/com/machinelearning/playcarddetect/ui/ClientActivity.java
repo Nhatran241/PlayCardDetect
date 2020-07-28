@@ -75,33 +75,42 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
     @Override
     protected void PrepareServer() {
         showDialogLoading();
-        ClientServerManager.getInstance().prepareClientServer(this,false, new ClientServerManager.IClientPrepareListener() {
-            @Override
-            public void OnPrepareClientServerSuccess() {
-                dismisDialogLoading();
-                /**
-                 * Chuẩn bị quá trình chụp ảnh
-                 */
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (!Settings.canDrawOverlays(ClientActivity.this)) {
-                        Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                        startActivityForResult(myIntent,OVERLAY);
-                    }else {
-                        requestCapture();
-                    }
-                }
-            }
+//        ClientServerManager.getInstance().prepareClientServer(this,false, new ClientServerManager.IClientPrepareListener() {
+//            @Override
+//            public void OnPrepareClientServerSuccess() {
+//                dismisDialogLoading();
+//                /**
+//                 * Chuẩn bị quá trình chụp ảnh
+//                 */
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                    if (!Settings.canDrawOverlays(ClientActivity.this)) {
+//                        Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+//                        startActivityForResult(myIntent,OVERLAY);
+//                    }else {
+//                        requestCapture();
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void OnPrepareClientServerFail(String error) {
+//                Toast.makeText(ClientActivity.this, ""+error, Toast.LENGTH_SHORT).show();
+//                dismisDialogLoading();
+//            }
+//
+//        });
+//        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+////        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//        startActivityForResult(intent,REQUESTACCESSIBILITY);
 
-            @Override
-            public void OnPrepareClientServerFail(String error) {
-                Toast.makeText(ClientActivity.this, ""+error, Toast.LENGTH_SHORT).show();
-                dismisDialogLoading();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(ClientActivity.this)) {
+                Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                startActivityForResult(myIntent,OVERLAY);
+            }else {
+                requestCapture();
             }
-
-        });
-        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivityForResult(intent,REQUESTACCESSIBILITY);
+        }
 
     }
 
@@ -275,6 +284,7 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
 ////                        intent.putExtra(Cons.Action,Cons.RemoteClick);
 ////                        intent.putExtra(Cons.RemoteClick,postion);
 ////                        startService(intent);
+            Log.d("capture", "onBitmapReady: "+bitmap.getWidth()+"/"+bitmap.getHeight());
             Bitmap bitmapForOcr = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth()/4,bitmap.getHeight()/4);
             ClientManager.getInstance().process(bitmapForOcr, new ClientManager.ClientManagerListener() {
                 @Override
@@ -283,26 +293,45 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
                     if(currentPosition== ClientManager.CurrentPosition.PLaying){
                         Rect cardsInHandZone = new Rect();
                         List<Card> listCardsInHand = new ArrayList<>();
-                        Bitmap bitmap2 =Bitmap.createBitmap(bitmap,0,bitmap.getHeight()-bitmap.getHeight()/3,bitmap.getWidth(),bitmap.getHeight()/3);
-                        bitmap.recycle();
-                        listCardsInHand.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(bitmap2, cardsInHandZone, 220, 230));
-                        bitmap2.recycle();
-                        if(listCardsInHand.size()>0) {
-                            ClientServerManager.getInstance().putClientHandCards(listCardsInHand, new ClientServerManager.IClientPutValueListener() {
-                                @Override
-                                public void OnClientPutValueSuccess() {
-                                    captureManager.takeScreenshot();
-                                }
-
-                                @Override
-                                public void OnClientPutValueFail(String error) {
-                                    captureManager.takeScreenshot();
-                                }
-                            });
-                        }else {
-
-                            captureManager.takeScreenshot();
+                        float scaleRatio  = bitmap.getWidth()*1f/bitmap.getHeight()*1f;
+                        int newHeight =bitmap.getHeight();
+                        int newWidth =bitmap.getWidth();
+                        if(scaleRatio>0){
+                            newWidth = 1024;
+                            newHeight = (int) (newHeight/scaleRatio);
                         }
+                        Log.d("nhatnhat", "OnCurrentPosition: "+bitmap.getWidth()+"/"+bitmap.getHeight());
+                        Log.d("nhatnhat", "OnCurrentPosition: "+scaleRatio);
+                        Log.d("nhatnhat", "OnCurrentPosition: "+newWidth+"/"+newHeight);
+                        Bitmap newBitmap = Bitmap.createScaledBitmap(bitmap,newWidth,newHeight,false);
+                        Bitmap handCardsBitmap = Bitmap.createBitmap(newBitmap,204,newHeight-(newHeight/3),newWidth-408,newHeight/3);
+                        bitmap.recycle();
+                        newBitmap.recycle();
+//                        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "testing";
+//                        try {
+//                            SaveImageUtil.getInstance().saveScreenshotToPicturesFolder(ClientActivity.this,handCardsBitmap,"testing",path,"PNG");
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+                        listCardsInHand.addAll(GetCardDataManager.getInstance().getCardsZoneBitmap(ClientActivity.this,handCardsBitmap, cardsInHandZone, 220, 230));
+//                        bitmapCardHand.recycle();
+//                        if(listCardsInHand.size()>0) {
+//                            ClientServerManager.getInstance().putClientHandCards(listCardsInHand, new ClientServerManager.IClientPutValueListener() {
+//                                @Override
+//                                public void OnClientPutValueSuccess() {
+//                                    captureManager.takeScreenshot();
+//                                }
+//
+//                                @Override
+//                                public void OnClientPutValueFail(String error) {
+//                                    captureManager.takeScreenshot();
+//                                }
+//                            });
+//                        }else {
+//
+//                            captureManager.takeScreenshot();
+//                        }
+                        captureManager.takeScreenshot();
 
                     }else {
                         captureManager.takeScreenshot();

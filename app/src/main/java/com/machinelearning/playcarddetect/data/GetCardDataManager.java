@@ -1,12 +1,16 @@
 package com.machinelearning.playcarddetect.data;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.os.Environment;
 import android.util.Log;
 
 import com.machinelearning.playcarddetect.data.model.Card;
+import com.machinelearning.playcarddetect.ui.ClientActivity;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,16 +35,19 @@ public class GetCardDataManager {
         boolean isK =false;
         boolean isA=false;
         boolean is10=true;
+        boolean is4_2_7 =false;
         int maxMatchInRowCount =0;
         for (int i = 0; i <height; i++) {
             String row = "";
             int[] matchInRow = new int[2];
             matchInRow[0]=-1;
             matchInRow[1]=-1;
+            int count=0;
             for (int j = 0; j < width; j++) {
                 int pixel = pixelsOfNumber[j + i * width];
                 if(lessThan) {
                     if (Color.red(pixel) <patternColor){
+                        count++;
                         row+= "0";
                         if(matchInRow[0]==-1){
                             matchInRow[0]=j;
@@ -53,7 +60,6 @@ public class GetCardDataManager {
                             listMatch.add(matchInRow);
                         }
                     }else {
-
                         row+= "1";
                         if(matchInRow[0]!=-1){
                             listMatch.add(matchInRow);
@@ -69,7 +75,9 @@ public class GetCardDataManager {
                     }
                 }
             }
-            Log.d("numberview", ": "+row);
+            Log.d("number", "checkNumber: "+row);
+            if(count==width)
+                is4_2_7=true;
             int matchInRowCount=0;
             if(listMatchInRow.size()>1){
                 if(listMatchInRow.size()==2&&listMatchInRow.size()==listMatch.size()){
@@ -122,6 +130,7 @@ public class GetCardDataManager {
                 premaxRectOutside = rectOutside.get(i);
             }
         }
+        Log.d("numberview", "rect inside: "+rectInside.size());
         if(rectInside.size()==2){
             //Q,8,
             int sqrFirst =((rectInside.get(0).right-rectInside.get(0).left)*(rectInside.get(0).bottom-rectInside.get(0).top));
@@ -133,15 +142,22 @@ public class GetCardDataManager {
         }else if(rectInside.size() ==1) {
             if(isA)
                 return "A";
-            if (maxRectInside.top < height / 4) {
-                return "9";
+            if (maxRectInside.top < height / 2) {
+                //9,4
+                if(is4_2_7){
+                    return "4";
+                }else {
+                    return "9";
+                }
             } else {
                     int sqrFirst =((rectOutside.get(0).right-rectOutside.get(0).left)*(rectOutside.get(0).bottom-rectOutside.get(0).top));
                     int sqrMaxInside =((maxRectInside.right-maxRectInside.left)*(maxRectInside.bottom-maxRectInside.top));
 
                     if(sqrFirst<sqrMaxInside){
                         return "6";
-                    }else return "4";
+                    }else {
+                        return "Not Detected";
+                    }
             }
         }else {
             //2,3,5,7,10,J,K
@@ -266,11 +282,7 @@ public class GetCardDataManager {
             }else if(listMatchInFirstColum.size()==2){
                 //3,5,J
                 if(listMatchInLastColum.size()==1){
-                    if(rectOutside.size()==3) {
                         return "J";
-                    }else {
-                        return "Not Detected";
-                    }
                 }else {
                     if(premaxRectOutside.left>width/2){
                         //3
@@ -458,7 +470,7 @@ public class GetCardDataManager {
         }
         return Card.Suit.NotDetect;
     }
-    public List<Card> getCardsZoneBitmap(Bitmap baseBitmap , Rect zoneContainCardsZone,int patternCard,int patternZone){
+    public List<Card> getCardsZoneBitmap(Context context,Bitmap baseBitmap , Rect zoneContainCardsZone, int patternCard, int patternZone){
         List<Card> cardsInZone = new ArrayList<>();
         /**
          * Lấy tất cả Rect của lá bài trong bitmap ban đầu
@@ -470,7 +482,7 @@ public class GetCardDataManager {
             /**
              * Nếu là lá bài thì chiều dài và rộng phải lớn hơn ít 10 rất nhiều
              */
-            if(cardRect.right-cardRect.left>=10 && cardRect.bottom-cardRect.top>10) {
+            if(cardRect.right-cardRect.left>=20 && cardRect.bottom-cardRect.top>20) {
 
                 number = "";
                 suitType = Card.Suit.NotDetect;
@@ -478,23 +490,29 @@ public class GetCardDataManager {
                  * Cắt nhỏ từng lá bài ra từ rect của chúng
                  */
                 Bitmap cardBitmap = Bitmap.createBitmap(baseBitmap, cardRect.left, cardRect.top, (cardRect.right - cardRect.left)+1, (cardRect.bottom - cardRect.top)+1);
+
+
                 /**
                  * Dựa vào lá bài vừa cắt tiếp tục chạy thuật toán để lấy các giá trị và hệ của lá bài
                  */
-                List<Rect> numberAndSuit = getRectsMathPattern(cardBitmap,patternCard,true);
+                List<Rect> numberAndSuit = getRectsMathPattern(cardBitmap,100,true);
                 if(numberAndSuit.size()>0) {
                     outsideloop:
                     for (int i = 0; i <numberAndSuit.size() ; i++) {
                             Rect numberAndSuitRect = numberAndSuit.get(i);
-                            if(i==0){
+                            Log.d("numberview", ": "+numberAndSuitRect.left+" : "+numberAndSuitRect.right+" : "+numberAndSuitRect.top+" : "+numberAndSuitRect.bottom);
+
+                        if(i==0){
                                 /**
                                  * Giá trị của lá bài (Level) luôn năm ở vị trí đầu tiên trong list các Rect lấy đc từ lá bài
                                  */
-                                number =checkNumber(cardBitmap,numberAndSuitRect,patternCard,true);
-                                Log.d("checksuitsssss", "getCardsZoneBitmap: "+number);
+                                number =checkNumber(cardBitmap,numberAndSuitRect,100,true);
+
+                                Log.d("numberview", ": "+number);
+                                Log.d("numberview", ": "+numberAndSuitRect.left+" : "+numberAndSuitRect.right+" : "+numberAndSuitRect.top+" : "+numberAndSuitRect.bottom);
                             }
                             else {
-                                if(!number.equals("Not Detected")&&!number.equals("")){
+                                 if(!number.equals("Not Detected")&&!number.equals("")){
                                     suitType =checkSuit(cardBitmap,numberAndSuitRect,patternCard,true);
                                     if(suitType!= Card.Suit.NotDetect){
                                         Card card = new Card();
@@ -577,11 +595,12 @@ public class GetCardDataManager {
                 0, 0, bitmap.getWidth(), bitmap.getHeight());
         Rect cardsZone = new Rect();
         cardsZone.left =-1;
+
         for (int i = 0; i < bitmap.getHeight(); i++) {
             for (int j = 0; j < bitmap.getWidth(); j++) {
                 int pixel = coverImageIntArray1D[j + i * bitmap.getWidth()];
                 if(lessThanPattern) {
-                    if (Color.red(pixel) <= patternRedColor&&pixel!=-1) {
+                    if (Color.red(pixel) <= patternRedColor) {
                         followPath(cardsZone, patternRedColor, true, coverImageIntArray1D, bitmap.getWidth(), bitmap.getHeight(), j, i);
 //                        cardsZone.right+=1;
                         if (cardsZone.right - cardsZone.left > 0 && cardsZone.bottom - cardsZone.top > 0) {
@@ -591,10 +610,10 @@ public class GetCardDataManager {
                         cardsZone.left = -1;
                     }
                 }else {
-                    if (Color.red(pixel) >= patternRedColor&&pixel!=-1) {
+                    if (Color.red(pixel) >= patternRedColor) {
                         followPath(cardsZone, patternRedColor, false, coverImageIntArray1D, bitmap.getWidth(), bitmap.getHeight(), j, i);
 //                        cardsZone.right+=1;
-                        if (cardsZone.right - cardsZone.left > 0 && cardsZone.bottom - cardsZone.top > 0) {
+                        if (cardsZone.right - cardsZone.left >= 0 && cardsZone.bottom - cardsZone.top >= 0) {
                             allRectCanBeCardZone.add(cardsZone);
                         }
                         cardsZone = new Rect();
@@ -642,6 +661,41 @@ public class GetCardDataManager {
     }
 
 
+    public Rect getCardsZoneFromBitmap(Bitmap bitmap,int patternRedColor){
+        int[] coverImageIntArray1D = new int[bitmap.getWidth() * bitmap.getHeight()];
+        bitmap.getPixels(coverImageIntArray1D, 0, bitmap.getWidth(),
+                0, 0, bitmap.getWidth(), bitmap.getHeight());
+        Rect cardsZone = new Rect();
+        cardsZone.left =0;
+        outerloop:
+        for (int i = 0; i < bitmap.getHeight(); i++) {
+            for (int j = 0; j < bitmap.getWidth(); j++) {
+                int pixel = coverImageIntArray1D[j + i * bitmap.getWidth()];
+                if(Color.red(pixel)>patternRedColor){
+                    if(cardsZone.left==0){
+                        cardsZone.left=j;
+                        cardsZone.top =i;
+                        break outerloop;
+                    }
+                }
+            }
+        }
+
+
+        outerloop:
+        for (int i = bitmap.getHeight()-1; i >=0; i--) {
+            for (int j = bitmap.getWidth()-1; j>=0; j--) {
+                int pixel = coverImageIntArray1D[j + i * bitmap.getWidth()];
+                if(Color.red(pixel)>patternRedColor){
+                    cardsZone.right = j;
+                    cardsZone.bottom =i;
+                    break outerloop;
+                }
+            }
+        }
+        return cardsZone;
+
+    }
 
 
 

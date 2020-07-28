@@ -119,10 +119,9 @@ public class CaptureManager {
             final Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
             final Point size = new Point();
             display.getRealSize(size);
-        display.getRealSize(size);
 //            if(width<height) {
-        width = 1080;
-        height = 720;
+        width = size.y;
+        height = size.x;
         imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @SuppressLint("StaticFieldLeak")
@@ -135,7 +134,6 @@ public class CaptureManager {
                         @Override
                         protected Bitmap doInBackground(final Void... params) {
                             Bitmap bitmap = null;
-
                                 if (image != null) {
                                     Image.Plane[] planes = image.getPlanes();
                                     ByteBuffer buffer = planes[0].getBuffer();
