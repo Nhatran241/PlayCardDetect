@@ -32,13 +32,15 @@ import android.widget.Toast;
 
 import com.machinelearning.playcarddetect.data.CaptureManager;
 import com.machinelearning.playcarddetect.R;
-import com.machinelearning.playcarddetect.data.Cons;
 import com.machinelearning.playcarddetect.data.SaveImageUtil;
 import com.machinelearning.playcarddetect.data.model.Card;
 import com.machinelearning.playcarddetect.data.GetCardDataManager;
 import com.machinelearning.playcarddetect.server.ClientManager;
 import com.machinelearning.playcarddetect.server.ClientServerManager;
+import com.machinelearning.playcarddetect.service.Cons;
 import com.machinelearning.playcarddetect.service.RemoteService;
+import com.machinelearning.playcarddetect.service.model.CustomPath;
+import com.machinelearning.playcarddetect.service.model.RemoteProfile;
 import com.machinelearning.playcarddetect.ui.base.BaseActivity;
 
 import java.io.File;
@@ -101,9 +103,7 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
             }
 
         });
-//        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-////        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//        startActivityForResult(intent,REQUESTACCESSIBILITY);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 //            if (!Settings.canDrawOverlays(ClientActivity.this)) {
@@ -142,9 +142,8 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
             public void onResult(boolean isGranted) {
                 if (isGranted) {
                     captureManager.init(ClientActivity.this);
-//                    captureManager.takeScreenshot();
-//                    initTimer();
-//                    chatHeadView();
+                    Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                    startActivityForResult(intent,REQUESTACCESSIBILITY);
                 } else {
                     captureManager.requestScreenshotPermission(ClientActivity.this, REQUESTCAPTURE);
                 }
@@ -232,10 +231,28 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
 //            }
 
         if(requestCode== REQUESTACCESSIBILITY){
-                    if (!Settings.canDrawOverlays(ClientActivity.this)) {
-                        Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                        startActivityForResult(myIntent,OVERLAY);
-                    }
+            Intent intent = new Intent(this, RemoteService.class);
+            List<CustomPath> pathList = new ArrayList<>();
+
+            CustomPath path1 = new CustomPath();
+            path1.moveTo(100,100);
+
+            CustomPath path2 = new CustomPath();
+            path2.moveTo(100,300);
+
+            CustomPath path3 = new CustomPath();
+            path3.moveTo(100,700);
+
+            CustomPath path4 = new CustomPath();
+            path4.moveTo(100,900);
+            pathList.add(path1);
+            pathList.add(path2);
+            pathList.add(path3);
+            pathList.add(path4);
+
+            RemoteProfile remoteProfile = new RemoteProfile(RemoteProfile.RemoteType.CLICK,pathList,0,3000,3000,500);
+            intent.putExtra(Cons.REMOTEPROFILE, remoteProfile);
+            startService(intent);
         }
         if(requestCode==OVERLAY){
             if (Settings.canDrawOverlays(this)) {
@@ -387,4 +404,7 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
         }
     }
 
+    public void testClick(View view) {
+        Toast.makeText(this, "clicked", Toast.LENGTH_SHORT).show();
+    }
 }
