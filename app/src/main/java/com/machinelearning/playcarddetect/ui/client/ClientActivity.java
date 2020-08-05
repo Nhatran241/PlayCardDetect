@@ -353,7 +353,8 @@ public class ClientActivity extends BaseActivity implements CaptureManager.onBit
                                     boolean notMatch=false;
                                     for (int i = 0; i <listCardsInHand.size() ; i++) {
                                         if(!listCardsInHand.get(i).getCardLevel().equals(listCardInHand.get(i).getCardLevel())||
-                                        !listCardsInHand.get(i).getCardsuit().equals(listCardInHand.get(i).getCardsuit())){
+                                        !listCardsInHand.get(i).getCardsuit().equals(listCardInHand.get(i).getCardsuit())||
+                                                !listCardsInHand.get(i).getCardRect().equals(listCardInHand.get(i).getCardRect())){
                                             notMatch=true;
                                             break;
                                         }

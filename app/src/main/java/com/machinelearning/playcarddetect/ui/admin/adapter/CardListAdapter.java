@@ -42,7 +42,6 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.ViewHo
     public void onBindViewHolder(ViewHolder holder, int position) {
         String cardlevel = mData.get(position).getCardLevel().toLowerCase();
         String cardsuit = mData.get(position).getCardsuit().toString().toLowerCase();
-        Log.d("nhatnhat", "onBindViewHolder: "+"c"+cardlevel+cardsuit);
         holder.cardImageView.setImageResource(getImageId(context,"c"+cardlevel+cardsuit));
     }
     public static int getImageId(Activity context, String imageName) {
