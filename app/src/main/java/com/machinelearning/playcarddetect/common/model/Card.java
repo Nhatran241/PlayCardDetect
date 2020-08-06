@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.data.model;
+package com.machinelearning.playcarddetect.model;
 
 import android.graphics.Rect;
 

@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.data;
+package com.machinelearning.playcarddetect;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;

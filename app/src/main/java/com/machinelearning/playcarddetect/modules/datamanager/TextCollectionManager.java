@@ -1,25 +1,21 @@
-package com.machinelearning.playcarddetect.server;
+package com.machinelearning.playcarddetect.modules.datacollection;
 
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.util.DisplayMetrics;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
-import com.machinelearning.playcarddetect.data.CaptureManager;
-import com.machinelearning.playcarddetect.data.SaveImageUtil;
 
-public class ClientManager {
-    private static ClientManager instance;
+public class TextCollectionManager {
+    private static TextCollectionManager instance;
     private TextRecognizer recognizer ;
 
     public enum CurrentPosition {
@@ -30,9 +26,9 @@ public class ClientManager {
         Disconnected,
         Undetected
     }
-    public static ClientManager getInstance() {
+    public static TextCollectionManager getInstance() {
         if(instance==null)
-            instance = new ClientManager();
+            instance = new TextCollectionManager();
         return instance;
     }
     public void process(Bitmap bitmap,ClientManagerListener clientManagerListener){

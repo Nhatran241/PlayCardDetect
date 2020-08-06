@@ -6,15 +6,13 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.machinelearning.playcarddetect.R;
 import com.machinelearning.playcarddetect.data.model.Card;
-import com.machinelearning.playcarddetect.reciver.TakeBitmapOnTime;
 import com.machinelearning.playcarddetect.server.ClientServerManager;
-import com.machinelearning.playcarddetect.ui.admin.CardListAdapter;
-import com.machinelearning.playcarddetect.ui.base.BaseActivity;
+import com.machinelearning.playcarddetect.data.modules.admin.CardListAdapter;
+import com.machinelearning.playcarddetect.data.common.BaseActivity;
 
 import java.util.List;
 

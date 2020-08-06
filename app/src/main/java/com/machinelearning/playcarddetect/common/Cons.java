@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.data;
+package com.machinelearning.playcarddetect;
 
 public class Cons {
     public static String RemoteClick = "remoteclick";

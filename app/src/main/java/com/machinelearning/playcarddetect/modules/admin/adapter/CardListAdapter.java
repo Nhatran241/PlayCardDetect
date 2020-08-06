@@ -1,18 +1,15 @@
-package com.machinelearning.playcarddetect.ui.admin;
+package com.machinelearning.playcarddetect.data.modules.admin;
 
 import android.app.Activity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.machinelearning.playcarddetect.R;
 import com.machinelearning.playcarddetect.data.model.Card;
-import com.machinelearning.playcarddetect.ui.view.CardImageView;
 
 import java.util.List;
 

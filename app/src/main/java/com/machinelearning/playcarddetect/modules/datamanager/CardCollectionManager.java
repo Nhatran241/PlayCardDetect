@@ -1,26 +1,24 @@
-package com.machinelearning.playcarddetect.data;
+package com.machinelearning.playcarddetect.modules.datacollection;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.os.Environment;
 import android.util.Log;
 
-import com.machinelearning.playcarddetect.data.model.Card;
+import com.machinelearning.playcarddetect.model.Card;
 import com.machinelearning.playcarddetect.ui.ClientActivity;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GetCardDataManager {
+public class CardCollectionManager {
     private static final int BITMAPWIDTH = 720;
-    private static GetCardDataManager instance;
+    private static CardCollectionManager instance;
 
-    public static GetCardDataManager getInstance() {
+    public static CardCollectionManager getInstance() {
         if(instance==null)
-            instance = new GetCardDataManager();
+            instance = new CardCollectionManager();
         return instance;
     }
 
