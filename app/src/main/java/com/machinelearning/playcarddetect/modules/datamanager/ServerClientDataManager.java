@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.server;
+package com.machinelearning.playcarddetect.modules.datamanager;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -12,29 +12,27 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.SetOptions;
-import com.machinelearning.playcarddetect.data.model.Card;
+import com.machinelearning.playcarddetect.common.model.CardBase64;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ClientServerManager {
-    private static ClientServerManager instance;
+public class ServerClientDataManager {
+    private static ServerClientDataManager instance;
     private FirebaseFirestore db ;
     private String deviceId;
     private List<String> listDevice = new ArrayList<>();
 
-    public static ClientServerManager getInstance() {
+    public static ServerClientDataManager getInstance() {
         if(instance==null)
-            instance = new ClientServerManager();
+            instance = new ServerClientDataManager();
         return instance;
     }
     @SuppressLint("HardwareIds")
@@ -47,6 +45,7 @@ public class ClientServerManager {
         RegisterClientToServer(deviceId, "Devices", iPrepareClientServerListener);
     }
     private void RegisterClientToServer(String id,String collectionPath,IClientPrepareListener iPrepareClientServerListener){
+
         Map<String, String> connection = new HashMap<>();
         connection.put("time", System.currentTimeMillis()+"");
         db.collection(collectionPath)
@@ -54,7 +53,8 @@ public class ClientServerManager {
                 .set(connection).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                iPrepareClientServerListener.OnPrepareClientServerSuccess();;
+                db.collection("Click").document(id).set(connection);
+                 iPrepareClientServerListener.OnPrepareClientServerSuccess();;
 
             }
         })
@@ -75,6 +75,7 @@ public class ClientServerManager {
                     for (int i = 0; i <document.getDocuments().size() ; i++) {
                         listDevice.add(document.getDocuments().get(i).getId());
                     }
+
                     iClientPrepareListener.OnPrepareClientServerSuccess();
                 } else {
                     Log.d("nhatnhat", "get failed with ", task.getException());
@@ -98,21 +99,35 @@ public class ClientServerManager {
                 db.collection("Devices").document(listDevice.get(i)).addSnapshotListener(new EventListener<DocumentSnapshot>() {
                     @Override
                     public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                        List<Card> cards = new ArrayList<>();
+                        List<CardBase64> cards = new ArrayList<>();
                         Map<String,Object> map = documentSnapshot.getData();
                         for (int j = 0; j <map.size() ; j++) {
-                            Card card =documentSnapshot.get(j+"",Card.class);
+                            CardBase64 card =documentSnapshot.get(j+"",CardBase64.class);
                             if(card!=null) {
                                 cards.add(card);
                             }
                         }
                         if(finalI ==0){
-                            iAdminListener.OnClientFirstDataChange(cards);
+                            iAdminListener.OnClientFirstDataChange(cards,listDevice.get(finalI));
                         }
                     }
                 });
             }
         }
+    }
+    public void RegisterClientListenerWithServer(IClientListener iClientListener){
+        db.collection("Click").document(deviceId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+                if(documentSnapshot.getData()!=null) {
+                    if(documentSnapshot.get("cardclick")!=null)
+                        iClientListener.OnServerClickCard(Integer.parseInt(String.valueOf(documentSnapshot.get("cardclick"))));
+                }
+
+            }
+        });
+
+
     }
 
     private void seletectDevice(String collectionPath,List<String> listDevice) {
@@ -124,8 +139,8 @@ public class ClientServerManager {
         });
     }
 
-    public void putClientHandCards(List<Card> listCardsInHand,IClientPutValueListener iClientPutValueListener) {
-        Map<String, Card> cards = new HashMap<>();
+    public void putClientHandCards(List<CardBase64> listCardsInHand,IClientPutValueListener iClientPutValueListener) {
+        Map<String, CardBase64> cards = new HashMap<>();
         for (int i = 0; i <listCardsInHand.size() ; i++) {
             cards.put(i+"",listCardsInHand.get(i));
         }
@@ -144,6 +159,22 @@ public class ClientServerManager {
         });
     }
 
+    public void putRemote(String clientID, int position) {
+        Map<String,Integer> click = new HashMap<>();
+        click.put("cardclick",position);
+        db.collection("Click")
+                .document(clientID).set(click).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+            }
+        });
+    }
+
     public interface IClientPrepareListener{
       void OnPrepareClientServerSuccess();
        void OnPrepareClientServerFail(String error);
@@ -152,10 +183,14 @@ public class ClientServerManager {
         void OnClientPutValueSuccess();
         void OnClientPutValueFail(String error);
     }
+    public interface IClientListener{
+        void OnServerClickCard(int position);
+        void OnServerClickXepBai();
+    }
     public interface IAdminListener{
-        void OnClientFirstDataChange(List<Card> cardList);
-        void OnClientSecondDataChange(List<Card> cardList);
-        void OnClientThirdDataChange(List<Card> cardList);
-        void OnClientTableCardDataChange(List<Card> cardList);
+        void OnClientFirstDataChange(List<CardBase64> cardList,String id);
+        void OnClientSecondDataChange(List<CardBase64> cardList);
+        void OnClientThirdDataChange(List<CardBase64> cardList);
+        void OnClientTableCardDataChange(List<CardBase64> cardList);
     }
 }

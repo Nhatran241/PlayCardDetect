@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.data;
+package com.machinelearning.playcarddetect.common;
 
 import android.content.Context;
 import android.graphics.Bitmap;

@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.data;
+package com.machinelearning.playcarddetect.modules.datamanager;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -25,6 +25,8 @@ import android.view.Display;
 import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
+
+import com.machinelearning.playcarddetect.modules.client.service.ClientService;
 
 import java.nio.ByteBuffer;
 
@@ -104,7 +106,6 @@ public class CaptureManager {
         }
     }
     public void init(@NonNull final Context context){
-             onBitmapListener = (CaptureManager.onBitmapListener) context;
             final MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) context.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
             try {
@@ -210,6 +211,10 @@ public class CaptureManager {
             mediaProjection.stop();
             mIntent = null;
         }
+    }
+
+    public void setListener(onBitmapListener onBitmapListener) {
+        this.onBitmapListener = onBitmapListener;
     }
 
     public interface onSavedImageListener {

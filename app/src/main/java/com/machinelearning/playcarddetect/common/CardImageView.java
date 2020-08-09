@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.ui.view;
+package com.machinelearning.playcarddetect.common;
 
 import android.content.Context;
 import android.util.AttributeSet;
