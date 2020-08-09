@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.ui;
+package com.machinelearning.playcarddetect.modules.admin;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -9,10 +9,11 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.machinelearning.playcarddetect.R;
-import com.machinelearning.playcarddetect.data.model.Card;
-import com.machinelearning.playcarddetect.server.ClientServerManager;
-import com.machinelearning.playcarddetect.data.modules.admin.CardListAdapter;
-import com.machinelearning.playcarddetect.data.common.BaseActivity;
+import com.machinelearning.playcarddetect.common.model.Card;
+import com.machinelearning.playcarddetect.common.model.CardBase64;
+import com.machinelearning.playcarddetect.modules.admin.adapter.CardListAdapter;
+import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager;
+import com.machinelearning.playcarddetect.common.BaseActivity;
 
 import java.util.List;
 
@@ -40,32 +41,29 @@ public class AdminActivity extends BaseActivity {
     @Override
     protected void PrepareServer() {
         showDialogLoading();
-        ClientServerManager.getInstance().prepareClientServer(this, true, new ClientServerManager.IClientPrepareListener() {
+        ServerClientDataManager.getInstance().prepareClientServer(this, true, new ServerClientDataManager.IClientPrepareListener() {
             @Override
             public void OnPrepareClientServerSuccess() {
                 dismisDialogLoading();
-                ClientServerManager.getInstance().RegisterAdminListenerWithClients(new ClientServerManager.IAdminListener() {
+                ServerClientDataManager.getInstance().RegisterAdminListenerWithClients(new ServerClientDataManager.IAdminListener() {
                     @Override
-                    public void OnClientFirstDataChange(List<Card> cardList) {
-                        firstClientAdapter = new CardListAdapter(AdminActivity.this,cardList);
+                    public void OnClientFirstDataChange(List<CardBase64> cardList, String id) {
+                        firstClientAdapter = new CardListAdapter(AdminActivity.this,cardList,id);
                         rv_first.setAdapter(firstClientAdapter);
-                        for (int i = 0; i <cardList.size() ; i++) {
-                            Log.d("nhatnhat", "OnClientFirstDataChange: "+cardList.get(i).getCardLevel());
-                        }
                     }
 
                     @Override
-                    public void OnClientSecondDataChange(List<Card> cardList) {
-
-                    }
-
-                    @Override
-                    public void OnClientThirdDataChange(List<Card> cardList) {
+                    public void OnClientSecondDataChange(List<CardBase64> cardList) {
 
                     }
 
                     @Override
-                    public void OnClientTableCardDataChange(List<Card> cardList) {
+                    public void OnClientThirdDataChange(List<CardBase64> cardList) {
+
+                    }
+
+                    @Override
+                    public void OnClientTableCardDataChange(List<CardBase64> cardList) {
 
                     }
                 });

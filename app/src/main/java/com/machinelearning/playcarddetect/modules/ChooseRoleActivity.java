@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.data.modules;
+package com.machinelearning.playcarddetect.modules;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,8 +8,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.machinelearning.playcarddetect.R;
-import com.machinelearning.playcarddetect.ui.AdminActivity;
-import com.machinelearning.playcarddetect.ui.ClientActivity;
+import com.machinelearning.playcarddetect.modules.admin.AdminActivity;
+import com.machinelearning.playcarddetect.modules.client.ClientActivity;
 
 public class ChooseRoleActivity extends AppCompatActivity {
 

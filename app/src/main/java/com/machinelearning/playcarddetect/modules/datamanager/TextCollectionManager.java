@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.modules.datacollection;
+package com.machinelearning.playcarddetect.modules.datamanager;
 
 import android.graphics.Bitmap;
 import android.graphics.Point;

@@ -1,6 +1,7 @@
-package com.machinelearning.playcarddetect.data.modules.admin;
+package com.machinelearning.playcarddetect.modules.admin.adapter;
 
 import android.app.Activity;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,22 +10,27 @@ import android.widget.ImageView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.machinelearning.playcarddetect.R;
-import com.machinelearning.playcarddetect.data.model.Card;
+import com.machinelearning.playcarddetect.common.ImageUtil;
+import com.machinelearning.playcarddetect.common.model.Card;
+import com.machinelearning.playcarddetect.common.model.CardBase64;
+import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager;
 
 import java.util.List;
 
 public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.ViewHolder> {
 
-    private List<Card> mData;
+    private List<CardBase64> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
     private Activity context;
+    private String clientID;
 
     // data is passed into the constructor
-    public CardListAdapter(Activity context, List<Card> data) {
+    public CardListAdapter(Activity context, List<CardBase64> data,String clientID) {
         this.mInflater = LayoutInflater.from(context);
         this.context = context;
         this.mData = data;
+        this.clientID =clientID;
     }
 
     // inflates the row layout from xml when needed
@@ -37,9 +43,13 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.ViewHo
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String cardlevel = mData.get(position).getCardLevel().toLowerCase();
-        String cardsuit = mData.get(position).getCardsuit().toString().toLowerCase();
-        holder.cardImageView.setImageResource(getImageId(context,"c"+cardlevel+cardsuit));
+        holder.cardImageView.setImageBitmap(ImageUtil.convert(mData.get(position).getCardBitmap64()));
+        holder.cardImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ServerClientDataManager.getInstance().putRemote(clientID,position);
+            }
+        });
     }
     public static int getImageId(Activity context, String imageName) {
         return context.getResources().getIdentifier("drawable/" + imageName, null, context.getPackageName());
@@ -68,15 +78,6 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.ViewHo
         }
     }
 
-    // convenience method for getting data at click position
-    Card getItem(int id) {
-        return mData.get(id);
-    }
-
-    // allows clicks events to be caught
-    void setClickListener(ItemClickListener itemClickListener) {
-        this.mClickListener = itemClickListener;
-    }
 
     // parent activity will implement this method to respond to click events
     public interface ItemClickListener {

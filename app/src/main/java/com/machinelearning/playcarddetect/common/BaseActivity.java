@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.data.common;
+package com.machinelearning.playcarddetect.common;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
