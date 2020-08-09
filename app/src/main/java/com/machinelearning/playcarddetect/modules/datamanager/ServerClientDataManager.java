@@ -123,6 +123,9 @@ public class ServerClientDataManager {
                     if(documentSnapshot.get("cardclick")!=null)
                         iClientListener.OnServerClickCard(Integer.parseInt(String.valueOf(documentSnapshot.get("cardclick"))));
 
+
+
+
                 }
 
             }
