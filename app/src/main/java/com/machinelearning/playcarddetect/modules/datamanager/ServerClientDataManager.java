@@ -12,6 +12,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -26,6 +27,8 @@ import java.util.Map;
 
 public class ServerClientDataManager {
     private static ServerClientDataManager instance;
+    public static String RESPONSE_SUCCESS = "success";
+    public static String RESPONSE_FAIL = "failed";
     private FirebaseFirestore db ;
     private String deviceId;
     private List<String> listDevice = new ArrayList<>();
@@ -33,6 +36,7 @@ public class ServerClientDataManager {
     public static ServerClientDataManager getInstance() {
         if(instance==null)
             instance = new ServerClientDataManager();
+
         return instance;
     }
     @SuppressLint("HardwareIds")
@@ -92,29 +96,127 @@ public class ServerClientDataManager {
 
 
     }
-    public void RegisterAdminListenerWithClients(IAdminListener iAdminListener){
-        if(listDevice.size()>0){
-            for (int i = 0; i <listDevice.size() ; i++) {
-                int finalI = i;
-                db.collection("Devices").document(listDevice.get(i)).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                    @Override
-                    public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                        List<CardBase64> cards = new ArrayList<>();
-                        Map<String,Object> map = documentSnapshot.getData();
-                        for (int j = 0; j <map.size() ; j++) {
-                            CardBase64 card =documentSnapshot.get(j+"",CardBase64.class);
-                            if(card!=null) {
-                                cards.add(card);
+
+    /**
+     * Admin function zone
+     */
+    public void RegisterAdminToServer(IAdminWaitingClientsJoinRoom iAdminListener){
+        /**
+         * Register Admin đến Room
+         * Room [
+         *   RoomID [ max 4
+         *     DeviceID1
+         *     DeviceID2
+         *     DeviceID3
+         *     DeviceID4
+         *   ]
+         * ]
+         *
+         *  Khi RoomID.size == 4 Có nghĩa đã đủ Client join vào phòng sẽ bắt đầu yêu cầu Client gửi dữ liệu
+         */
+        String roomPath = "Room";
+        if(db==null)
+            db=FirebaseFirestore.getInstance();
+        db.collection(roomPath).addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                if(value!=null) {
+                    List<DocumentChange> documentChangeList = value.getDocumentChanges();
+                    for (DocumentChange document:documentChangeList) {
+                        Map<String, Object> map = document.getDocument().getData();
+                        if(map.size()==4){
+                            List<String> list = new ArrayList<>();
+                            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                                list.add(entry.getValue().toString());
                             }
-                        }
-                        if(finalI ==0){
-                            iAdminListener.OnClientFirstDataChange(cards,listDevice.get(finalI));
+                            iAdminListener.onClientJoinSuccess(document.toString(),list);
                         }
                     }
-                });
+                }
+
             }
-        }
+        });
+
+
+//        if(listDevice.size()>0){
+//            for (int i = 0; i <listDevice.size() ; i++) {
+//                int finalI = i;
+//                db.collection("Room").document(listDevice.get(i)).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+//                    @Override
+//                    public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+//                        List<CardBase64> cards = new ArrayList<>();
+//                        Map<String,Object> map = documentSnapshot.getData();
+//                        for (int j = 0; j <map.size() ; j++) {
+//                            CardBase64 card =documentSnapshot.get(j+"",CardBase64.class);
+//                            if(card!=null) {
+//                                cards.add(card);
+//                            }
+//                        }
+//                        if(finalI ==0){
+//                            iAdminListener.OnClientFirstDataChange(cards,listDevice.get(finalI));
+//                        }
+//                    }
+//                });
+//            }
+//        }
     }
+    public void RequestClientData(String clientId,IRequestClientData iRequestClientData){
+        /**
+         * Admin listener đến DeviceID trong Path DEVICES
+         * khi client đẩy dữ liệu lên server admin sẽ nhận dữ liệu
+         */
+        String path = "Devices";
+        if(db==null)
+            db=FirebaseFirestore.getInstance();
+        db.collection(path).document(clientId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            List<CardBase64> cards = new ArrayList<>();
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
+                if(value!=null){
+                        Map<String,Object> map = value.getData();
+                        if(map!=null){
+                            for (int j = 0; j <map.size() ; j++) {
+                                CardBase64 card =value.get(j+"",CardBase64.class);
+                                if(card!=null) {
+                                    cards.add(card);
+                                }
+                            }
+                            iRequestClientData.onClientDataResponse(cards,RESPONSE_SUCCESS);
+                        }else {
+                            iRequestClientData.onClientDataResponse(cards,RESPONSE_FAIL);
+                        }
+                }else {
+                    iRequestClientData.onClientDataResponse(cards,RESPONSE_FAIL);
+                }
+            }
+        });
+    }
+
+    /**
+     * Client function zone
+     */
+    public void RegisterClientToServer(){
+
+    }
+    public void RegisterClientToRoom(Context context,int room){
+        deviceId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+        String roomPath = "Room";
+        if(db==null)
+            db=FirebaseFirestore.getInstance();
+        db.collection(roomPath).document(room+"").set(deviceId).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+    }
+
+
     public void RegisterClientListenerWithServer(IClientListener iClientListener){
         db.collection("Click").document(deviceId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
@@ -132,15 +234,6 @@ public class ServerClientDataManager {
         });
 
 
-    }
-
-    private void seletectDevice(String collectionPath,List<String> listDevice) {
-        db.collection(collectionPath).document(listDevice.get(0)).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-
-            }
-        });
     }
 
     public void putClientHandCards(List<CardBase64> listCardsInHand,IClientPutValueListener iClientPutValueListener) {
@@ -191,10 +284,10 @@ public class ServerClientDataManager {
         void OnServerClickCard(int position);
         void OnServerClickXepBai();
     }
-    public interface IAdminListener{
-        void OnClientFirstDataChange(List<CardBase64> cardList,String id);
-        void OnClientSecondDataChange(List<CardBase64> cardList);
-        void OnClientThirdDataChange(List<CardBase64> cardList);
-        void OnClientTableCardDataChange(List<CardBase64> cardList);
+    public interface IAdminWaitingClientsJoinRoom{
+        void onClientJoinSuccess(String roomID,List<String> listDeviceID);
+    }
+    public interface IRequestClientData{
+        void onClientDataResponse(List<CardBase64> cardBase64List,String response);
     }
 }

@@ -1,4 +1,4 @@
-package com.machinelearning.playcarddetect.modules.admin
+package com.machinelearning.playcarddetect.modules.admin.presenter
 
 import android.os.Bundle
 import android.util.Log

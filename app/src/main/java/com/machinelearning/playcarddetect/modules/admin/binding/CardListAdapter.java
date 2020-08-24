@@ -1,7 +1,6 @@
-package com.machinelearning.playcarddetect.modules.admin.adapter;
+package com.machinelearning.playcarddetect.modules.admin.binding;
 
 import android.app.Activity;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.machinelearning.playcarddetect.R;
 import com.machinelearning.playcarddetect.common.ImageUtil;
-import com.machinelearning.playcarddetect.common.model.Card;
 import com.machinelearning.playcarddetect.common.model.CardBase64;
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager;
 
