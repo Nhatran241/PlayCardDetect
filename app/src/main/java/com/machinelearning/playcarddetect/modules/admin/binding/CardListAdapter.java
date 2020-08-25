@@ -45,7 +45,7 @@ public class CardListAdapter extends RecyclerView.Adapter<CardListAdapter.ViewHo
         holder.cardImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ServerClientDataManager.getInstance().putRemote(clientID,position);
+//                ServerClientDataManager.getInstance().putRemote(clientID,position);
             }
         });
     }

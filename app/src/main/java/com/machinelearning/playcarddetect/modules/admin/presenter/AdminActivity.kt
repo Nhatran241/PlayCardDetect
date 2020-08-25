@@ -13,8 +13,9 @@ import com.machinelearning.playcarddetect.modules.admin.business.AdminActivityVi
 import com.machinelearning.playcarddetect.modules.admin.business.ItemCardViewModel
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager.*
+import kotlin.math.log
 
-class AdminActivity:BaseActivity(),IAdminCallbackToRemotePath,IAdminListenerToDataPath,IAdminListenerToRoomPath{
+class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataPath,IAdminListenerToRoomPath{
     lateinit var binding : ActivitiyAdminBinding
     var viewModel = AdminActivityViewModel()
     val serverClientDataManager =  ServerClientDataManager.getInstance()
@@ -36,19 +37,19 @@ class AdminActivity:BaseActivity(),IAdminCallbackToRemotePath,IAdminListenerToDa
     }
 
     override fun onDataResponse(data: String?, message: String?) {
-
+        Log.d(TAG, "onDataResponse: $data/$message")
     }
 
     override fun onRoom(data: String?, mesaage: String?) {
-        TODO("Not yet implemented")
+        Log.d(TAG, "onRoom: $data/$mesaage")
     }
 
-    override fun onSuccess() {
-        TODO("Not yet implemented")
+    override fun onPushSuccess() {
+        Log.d(TAG, "onPushSuccess: ")
     }
 
-    override fun onFailed(error: String?) {
-        TODO("Not yet implemented")
+    override fun onPushFailed(error: String?) {
+        Log.d(TAG, "onPushFailed: $error")
     }
 
 

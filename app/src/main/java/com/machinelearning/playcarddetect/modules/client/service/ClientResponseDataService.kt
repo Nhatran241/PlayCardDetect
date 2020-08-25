@@ -64,21 +64,21 @@ class ClientResponseDataService : AccessibilityService(){
         /**
          * Register Self device to server too handle remote event
          */
-        ServerClientDataManager.getInstance().RegisterClientToRemoteServer(this,object:ServerClientDataManager.IRegisterClientToRemoteServer{
-            override fun onRegisterClientToRemoteServerFailed(errro: String?) {
-                Toast.makeText(this@ClientResponseDataService,""+errro,Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onRegisterClientToRemoteServerSuccess() {
-                Log.d("nhatnhat","Successs")
-            }
-
-            override fun onReponseFromRemoteServer(action: String?) {
-                Log.d("nhatnhat", "Action $action")
-            }
-
-        })
-
+//        ServerClientDataManager.getInstance().RegisterClientToRemoteServer(this,object:ServerClientDataManager.IRegisterClientToRemoteServer{
+//            override fun onRegisterClientToRemoteServerFailed(errro: String?) {
+//                Toast.makeText(this@ClientResponseDataService,""+errro,Toast.LENGTH_SHORT).show()
+//            }
+//
+//            override fun onRegisterClientToRemoteServerSuccess() {
+//                Log.d("nhatnhat","Successs")
+//            }
+//
+//            override fun onReponseFromRemoteServer(action: String?) {
+//                Log.d("nhatnhat", "Action $action")
+//            }
+//
+//        })
+//
 
 
 //        getInstance().prepareClientServer(this, false, object : IClientPrepareListener {
@@ -163,37 +163,37 @@ class ClientResponseDataService : AccessibilityService(){
 //        Log.d("nhatnhat", "onStartCommand:3$result")
 //    }
 
-    private fun checkRoomNumber(bitmap: Bitmap) {
-        val bitmapForOcr = getNumberRoomBitmap(bitmap)
-            TextCollectionManager.getInstance().getRoomNumber(bitmapForOcr, object : TextCollectionManager.IGetNumberListener {
-                override fun OnGetNumberSuccess(text: String?) {
-                    bitmapForOcr.recycle()
-                    Log.d("getRoomNumber", "onSuccess: $text")
-                    var roomnumber = text?.intOrString()
-                    if(roomnumber is Int){
-                        Log.d("getRoomNumber", "onSuccess: $roomnumber")
-                        ServerClientDataManager.getInstance().RegisterClientToRoom(baseContext,roomnumber)
-                    }else{
-                        //
-                    }
-                    captureManager?.takeScreenshot()
-
-                }
-
-                override fun OnGetNumberFailed(error: String?) {
-                    bitmapForOcr.recycle()
-                    Log.d("getRoomNumber", "error: $error")
-                    captureManager?.takeScreenshot()
-                }
-
-            })
-//        TextCollectionManager.getInstance().get(bitmapForOcr) { currentPosition: CurrentPosition, postionClick: IntArray? ->
-//            bitmapForOcr.recycle()
-//            if (currentPosition == CurrentPosition.PLaying) {
-//                prepareAndPutData(bitmap)
-//            } else captureManager!!.takeScreenshot()
-//        }
-    }
+//    private fun checkRoomNumber(bitmap: Bitmap) {
+//        val bitmapForOcr = getNumberRoomBitmap(bitmap)
+//            TextCollectionManager.getInstance().getRoomNumber(bitmapForOcr, object : TextCollectionManager.IGetNumberListener {
+//                override fun OnGetNumberSuccess(text: String?) {
+//                    bitmapForOcr.recycle()
+//                    Log.d("getRoomNumber", "onSuccess: $text")
+//                    var roomnumber = text?.intOrString()
+//                    if(roomnumber is Int){
+//                        Log.d("getRoomNumber", "onSuccess: $roomnumber")
+//                        ServerClientDataManager.getInstance().RegisterClientToRoom(baseContext,roomnumber)
+//                    }else{
+//                        //
+//                    }
+//                    captureManager?.takeScreenshot()
+//
+//                }
+//
+//                override fun OnGetNumberFailed(error: String?) {
+//                    bitmapForOcr.recycle()
+//                    Log.d("getRoomNumber", "error: $error")
+//                    captureManager?.takeScreenshot()
+//                }
+//
+//            })
+////        TextCollectionManager.getInstance().get(bitmapForOcr) { currentPosition: CurrentPosition, postionClick: IntArray? ->
+////            bitmapForOcr.recycle()
+////            if (currentPosition == CurrentPosition.PLaying) {
+////                prepareAndPutData(bitmap)
+////            } else captureManager!!.takeScreenshot()
+////        }
+//    }
 
     private fun getNumberRoomBitmap(bitmap: Bitmap): Bitmap {
             val numberRoomBitmap = Bitmap.createBitmap(bitmap, numberRoomRect.left,numberRoomRect.top,numberRoomRect.right-numberRoomRect.left,numberRoomRect.bottom-numberRoomRect.top)

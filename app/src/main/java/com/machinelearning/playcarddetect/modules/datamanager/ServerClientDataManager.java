@@ -58,7 +58,7 @@ public class ServerClientDataManager {
         db.collection(dataPath).addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                    iAdminListenerToDataPath.onDataResponse("Admin_listener_data",e.toString());
+                iAdminListenerToDataPath.onDataResponse("Admin_listener_data",e+"");
             }
         });
     }
@@ -66,20 +66,21 @@ public class ServerClientDataManager {
         db.collection(roomPath).addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                iAdminListenerToRoomPath.onRoom("Admin_listener_room",e.toString());
+                assert e != null;
+                iAdminListenerToRoomPath.onRoom("Admin_listener_room",e+"");
             }
         });
     }
-    public void AdminPushRemote(Action action,String deviceIdListenerAction,IAdminCallbackToRemotePath iAdminCallbackToRemotePath){
+    public void AdminPushRemote(Action action,String deviceIdListenerAction,IAdminPutRemoteCallback iAdminPutRemoteCallback){
         db.collection(remotePath).document(deviceIdListenerAction).set(action).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                iAdminCallbackToRemotePath.onSuccess();
+                iAdminPutRemoteCallback.onPushSuccess();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                iAdminCallbackToRemotePath.onFailed(e.toString());
+                iAdminPutRemoteCallback.onPushFailed(e.toString());
             }
         });
     }
@@ -140,9 +141,9 @@ public class ServerClientDataManager {
     public interface IAdminListenerToRoomPath{
         void onRoom(String data,@Nullable String mesaage);
     }
-    public interface IAdminCallbackToRemotePath{
-        void onSuccess();
-        void onFailed(String error);
+    public interface IAdminPutRemoteCallback{
+        void onPushSuccess();
+        void onPushFailed(String error);
     }
 
     /**
