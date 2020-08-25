@@ -26,7 +26,6 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
-import com.machinelearning.playcarddetect.modules.client.service.ClientService;
 
 import java.nio.ByteBuffer;
 

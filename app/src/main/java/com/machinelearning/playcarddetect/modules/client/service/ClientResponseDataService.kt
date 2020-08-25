@@ -8,6 +8,7 @@ import android.os.Handler
 import android.util.Log
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
+import android.widget.Toast
 import com.machinelearning.playcarddetect.common.intOrString
 import com.machinelearning.playcarddetect.common.model.CardBase64
 import com.machinelearning.playcarddetect.common.setNotification
@@ -58,6 +59,28 @@ class ClientResponseDataService : AccessibilityService(){
             screenWidth = size.x
             screenHeight = size.y
         }
+
+
+        /**
+         * Register Self device to server too handle remote event
+         */
+        ServerClientDataManager.getInstance().RegisterClientToRemoteServer(this,object:ServerClientDataManager.IRegisterClientToRemoteServer{
+            override fun onRegisterClientToRemoteServerFailed(errro: String?) {
+                Toast.makeText(this@ClientResponseDataService,""+errro,Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onRegisterClientToRemoteServerSuccess() {
+                Log.d("nhatnhat","Successs")
+            }
+
+            override fun onReponseFromRemoteServer(action: String?) {
+                Log.d("nhatnhat", "Action $action")
+            }
+
+        })
+
+
+
 //        getInstance().prepareClientServer(this, false, object : IClientPrepareListener {
 //            override fun OnPrepareClientServerSuccess() {
 //                getInstance().RegisterClientListenerWithServer(object : IClientListener {
@@ -89,15 +112,15 @@ class ClientResponseDataService : AccessibilityService(){
     }
 
     private fun handleBitmap(it: Bitmap?) {
-        if (it != null) {
-//            if (currentPosition == CurrentPosition.PLaying) {
-//                prepareAndPutData(bitmap)
-//            } else {
-                checkRoomNumber(it)
-//            }
-        } else {
+//        if (it != null) {
+////            if (currentPosition == CurrentPosition.PLaying) {
+////                prepareAndPutData(bitmap)
+////            } else {
+//                checkRoomNumber(it)
+////            }
+//        } else {
             captureManager!!.takeScreenshot()
-        }
+//        }
 
     }
 

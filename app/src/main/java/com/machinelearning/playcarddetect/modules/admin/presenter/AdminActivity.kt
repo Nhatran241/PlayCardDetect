@@ -2,8 +2,10 @@ package com.machinelearning.playcarddetect.modules.admin.presenter
 
 import android.os.Bundle
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.machinelearning.playcarddetect.R
+import com.machinelearning.playcarddetect.common.Action
 import com.machinelearning.playcarddetect.common.BaseActivity
 import com.machinelearning.playcarddetect.common.model.CardBase64
 import com.machinelearning.playcarddetect.databinding.ActivitiyAdminBinding
@@ -12,9 +14,10 @@ import com.machinelearning.playcarddetect.modules.admin.business.ItemCardViewMod
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager.*
 
-class AdminActivity :BaseActivity(){
+class AdminActivity:BaseActivity(),IAdminCallbackToRemotePath,IAdminListenerToDataPath,IAdminListenerToRoomPath{
     lateinit var binding : ActivitiyAdminBinding
     var viewModel = AdminActivityViewModel()
+    val serverClientDataManager =  ServerClientDataManager.getInstance()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activitiy_admin)
@@ -28,26 +31,25 @@ class AdminActivity :BaseActivity(){
 
     override fun PrepareServer() {
         showDialogLoading()
-        val serverClientDataManager = ServerClientDataManager.getInstance()
-        serverClientDataManager.RegisterAdminToServer { roomID, listDeviceID ->
-            Log.d(TAG, "PrepareServer: $roomID : $listDeviceID")
-            if(listDeviceID.size>0) {
-                dismisDialogLoading()
-                listDeviceID.forEachIndexed { index, id ->
-                    serverClientDataManager.RequestClientData(id) { cardBase64List, response ->
-                        Log.d(TAG, "PrepareServer: requestClientData $response")
-                        if (response == RESPONSE_SUCCESS) {
-                            viewModel.listCard.value = cardBase64List.map {
-                                ItemCardViewModel(CardBase64.convert(it.cardBitmap64),it.cardRect)
-                            }
-                        }
-                    }
-                }
-            }else{
-                Log.d(TAG, "PrepareServer: no room")
-            }
-        }
+        serverClientDataManager.AdminListenerToDataPath(this)
+        serverClientDataManager.AdminListenerToRoomPath(this)
+    }
+
+    override fun onDataResponse(data: String?, message: String?) {
 
     }
+
+    override fun onRoom(data: String?, mesaage: String?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onSuccess() {
+        TODO("Not yet implemented")
+    }
+
+    override fun onFailed(error: String?) {
+        TODO("Not yet implemented")
+    }
+
 
 }

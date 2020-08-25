@@ -1,4 +1,13 @@
 package com.machinelearning.playcarddetect;
 
-public class App {
+import android.app.Application;
+
+import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager;
+
+public class App extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        ServerClientDataManager.getInstance().init(this);
+    }
 }

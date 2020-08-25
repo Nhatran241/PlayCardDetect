@@ -8,7 +8,6 @@ import com.machinelearning.playcarddetect.common.BaseActivity
 import com.machinelearning.playcarddetect.common.Cons
 import com.machinelearning.playcarddetect.modules.client.service.ClientResponseDataService
 import com.machinelearning.playcarddetect.modules.client.service.ClientResponseDataService.Companion.isConnected
-import com.machinelearning.playcarddetect.modules.client.service.ClientService
 import com.machinelearning.playcarddetect.modules.datamanager.CaptureManager
 import com.machinelearning.playcarddetect.modules.datamanager.CaptureManager.onGrantedPermissionListener
 
@@ -28,7 +27,7 @@ class ClientActivity :BaseActivity(){
         captureManager = CaptureManager.getInstance()
     }
     private fun askPermission() {
-        if (ClientService.isConnected) {
+        if (ClientResponseDataService.isConnected) {
             requestCapture()
         } else {
             askAccessibilityPermission()
