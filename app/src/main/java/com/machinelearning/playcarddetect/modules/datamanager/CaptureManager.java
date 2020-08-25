@@ -26,7 +26,6 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
-import com.machinelearning.playcarddetect.modules.client.service.ClientService;
 
 import java.nio.ByteBuffer;
 
@@ -121,8 +120,8 @@ public class CaptureManager {
             final Point size = new Point();
             display.getRealSize(size);
 //            if(width<height) {
-        width = size.y;
-        height = size.x;
+        width = size.x;
+        height = size.y;
         imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @SuppressLint("StaticFieldLeak")
@@ -139,10 +138,12 @@ public class CaptureManager {
                                     Image.Plane[] planes = image.getPlanes();
                                     ByteBuffer buffer = planes[0].getBuffer();
                                     int pixelStride = planes[0].getPixelStride(), rowStride = planes[0].getRowStride(), rowPadding = rowStride - pixelStride * width;
-
-
                                     bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
+                                    Log.d("bitmapchecksize", "doInBackground: "+bitmap.getWidth()+"/"+bitmap.getHeight());
                                     bitmap.copyPixelsFromBuffer(buffer);
+                                    Bitmap newbitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
+                                    Log.d("bitmapchecksize", "doInBackground: "+newbitmap.getWidth()+"/"+newbitmap.getHeight());
+                                    bitmap.recycle();
                                     Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                                     Canvas c = new Canvas(bmpGrayscale);
                                     Paint paint = new Paint();
@@ -150,8 +151,8 @@ public class CaptureManager {
                                     cm.setSaturation(0);
                                     ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
                                     paint.setColorFilter(f);
-                                    c.drawBitmap(bitmap, 0, 0, paint);
-                                    bitmap.recycle();
+                                    c.drawBitmap(newbitmap, 0, 0, paint);
+                                    newbitmap.recycle();
 //                                bitmap.recycle();
 //                                virtualDisplay.release();
                                     image.close();

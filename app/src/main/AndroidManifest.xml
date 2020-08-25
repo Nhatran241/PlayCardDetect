@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.ACTION_MANAGE_OVERLAY_PERMISSION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <application
+        android:name=".App"
         android:hardwareAccelerated="true"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -23,7 +24,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".modules.client.service.ClientService"
+            android:name=".modules.client.service.ClientResponseDataService"
             android:foregroundServiceType="mediaProjection"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
@@ -33,10 +34,11 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility" />
         </service>
-        <activity android:name=".modules.client.ClientActivity"/>
         <activity
             android:screenOrientation="landscape"
-            android:name=".modules.admin.AdminActivity"/>
+            android:name=".modules.admin.presenter.AdminActivity"/>
+        <activity
+            android:name=".modules.client.presenter.ClientActivity"/>
 
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
