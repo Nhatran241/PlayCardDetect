@@ -16,7 +16,7 @@ class ClientActivity :BaseActivity(){
         const val REQUESTACCESSIBILITY = 2222
         const val REQUESTCAPTURE = 2223
     }
-    lateinit var  captureManager : CaptureManager
+    var  captureManager : CaptureManager =CaptureManager.getInstance()
 
     override fun PrepareServer() {
         askPermission()
@@ -24,7 +24,6 @@ class ClientActivity :BaseActivity(){
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        captureManager = CaptureManager.getInstance()
     }
     private fun askPermission() {
         if (ClientResponseDataService.isConnected) {

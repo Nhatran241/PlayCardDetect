@@ -64,6 +64,21 @@ class ClientResponseDataService : AccessibilityService(){
         /**
          * Register Self device to server too handle remote event
          */
+        ServerClientDataManager.getInstance().ClientPushRoom("0",object:ServerClientDataManager.IClientCallbackToRoomPath{
+            override fun onSuccess() {
+                Log.d(TAG, "onServiceConnected")
+            }
+
+            override fun onFailed(error: String?) {
+
+                Log.d(TAG, "onServiceConnected: $error")
+            }
+
+        })
+        ServerClientDataManager.getInstance().ClientListenerToRemotePath {
+            Log.d(TAG, "onServiceConnected: $it")
+        }
+
 //        ServerClientDataManager.getInstance().RegisterClientToRemoteServer(this,object:ServerClientDataManager.IRegisterClientToRemoteServer{
 //            override fun onRegisterClientToRemoteServerFailed(errro: String?) {
 //                Toast.makeText(this@ClientResponseDataService,""+errro,Toast.LENGTH_SHORT).show()
