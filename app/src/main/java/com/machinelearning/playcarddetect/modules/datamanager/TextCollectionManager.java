@@ -31,6 +31,27 @@ public class TextCollectionManager {
             instance = new TextCollectionManager();
         return instance;
     }
+
+    /**
+     * Get Room Number from Bitmap
+     * @param bitmap
+     */
+    public void getRoomNumber(@NonNull Bitmap bitmap,IGetNumberListener iGetNumberListener){
+        if(recognizer ==null)
+            recognizer = TextRecognition.getClient();
+        InputImage image = InputImage.fromBitmap(bitmap, 0);
+        recognizer.process(image).addOnSuccessListener(new OnSuccessListener<Text>() {
+            @Override
+            public void onSuccess(Text text) {
+                iGetNumberListener.OnGetNumberSuccess(text.getText());
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                iGetNumberListener.OnGetNumberFailed(e.getMessage());
+            }
+        });
+    }
     public void process(Bitmap bitmap,ClientManagerListener clientManagerListener){
         if(recognizer ==null)
             recognizer = TextRecognition.getClient();
@@ -103,5 +124,9 @@ public class TextCollectionManager {
     }
     public interface ClientManagerListener{
         void OnCurrentPosition(CurrentPosition currentPosition,int[] postionClick);
+    }
+    public interface IGetNumberListener{
+        void OnGetNumberSuccess(String roomNumber);
+        void OnGetNumberFailed(String error);
     }
 }

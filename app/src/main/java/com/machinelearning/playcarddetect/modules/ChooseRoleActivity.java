@@ -8,8 +8,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.machinelearning.playcarddetect.R;
-import com.machinelearning.playcarddetect.modules.admin.AdminActivity;
-import com.machinelearning.playcarddetect.modules.client.ClientActivity;
+import com.machinelearning.playcarddetect.modules.admin.presenter.AdminActivity;
+import com.machinelearning.playcarddetect.modules.client.presenter.ClientActivity;
 
 public class ChooseRoleActivity extends AppCompatActivity {
 
