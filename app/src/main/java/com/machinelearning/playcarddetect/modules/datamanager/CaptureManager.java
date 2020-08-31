@@ -123,7 +123,7 @@ public class CaptureManager {
 //            if(width<height) {
         width = size.x;
         height = size.y;
-        imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBX_8888, 1);
+        imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @SuppressLint("StaticFieldLeak")
             @Override

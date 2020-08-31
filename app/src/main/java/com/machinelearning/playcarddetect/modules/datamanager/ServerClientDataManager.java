@@ -8,21 +8,20 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
-import com.machinelearning.playcarddetect.common.Action;
+import com.google.gson.Gson;
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.OpenApp;
 import com.machinelearning.playcarddetect.common.model.CardBase64;
-import com.machinelearning.playcarddetect.common.model.ClientModel;
+import com.nhatran241.accessibilityactionmodule.model.Action;
+import com.nhatran241.accessibilityactionmodule.model.ClickAction;
+import com.nhatran241.accessibilityactionmodule.model.SwipeAction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +39,7 @@ public class ServerClientDataManager {
     private FirebaseFirestore db ;
     private String deviceId;
     private List<String> listDevice = new ArrayList<>();
-
+    private Gson gson = new Gson();
     public static ServerClientDataManager getInstance() {
         if(instance==null)
             instance = new ServerClientDataManager();
@@ -81,7 +80,9 @@ public class ServerClientDataManager {
         });
     }
     public void AdminPushRemote(Action action,String deviceIdListenerAction,IAdminPutRemoteCallback iAdminPutRemoteCallback){
-        db.collection(remotePath).document(deviceIdListenerAction).set(action,SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+        Map<String,Action> map = new HashMap<>();
+        map.put("action",action);
+        db.collection(remotePath).document(deviceId).set(map).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 iAdminPutRemoteCallback.onPushSuccess();
@@ -132,20 +133,21 @@ public class ServerClientDataManager {
         });
     }
     public void ClientListenerToRemotePath(IClientListenerToRemotePath iClientListenerToRemotePath){
-        db.collection(remotePath).document(deviceId).set(new Action()).addOnSuccessListener(new OnSuccessListener<Void>() {
+        db.collection(remotePath).document(deviceId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
-            public void onSuccess(Void aVoid) {
-                db.collection(remotePath).document(deviceId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                    @Override
-                    public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                        iClientListenerToRemotePath.onRemote("Client_listener_remote_oke"+documentSnapshot);
+            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+                assert documentSnapshot != null;
+                String json = documentSnapshot.get("action").toString();
+                Log.d("nhatnhat", "onEvent: "+json);
+                if(json.contains("packagename")){
+                    iClientListenerToRemotePath.onRemote(gson.fromJson(json,OpenApp.class));
+                }else if(json.contains("gesture")){
+                    if(json.contains("isSwipe")) {
+                        iClientListenerToRemotePath.onRemote(gson.fromJson(json, SwipeAction.class));
+                    }else {
+                        iClientListenerToRemotePath.onRemote(gson.fromJson(json,ClickAction.class));
                     }
-                });
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                iClientListenerToRemotePath.onRemote("Client_listener_remote_faild"+e.toString());
+                }
             }
         });
 
@@ -172,7 +174,7 @@ public class ServerClientDataManager {
      * Client Callback/Listener Interface
      */
     public interface IClientListenerToRemotePath{
-        void onRemote(String action);
+        void onRemote(Action action);
     }
     public interface IClientCallbackToDataPath{
         void onSuccess();

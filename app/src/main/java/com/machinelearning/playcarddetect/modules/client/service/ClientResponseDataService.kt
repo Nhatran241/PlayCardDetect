@@ -1,6 +1,5 @@
 package com.machinelearning.playcarddetect.modules.client.service
 
-import android.accessibilityservice.AccessibilityService
 import android.graphics.Bitmap
 import android.graphics.Point
 import android.graphics.Rect
@@ -9,16 +8,21 @@ import android.util.Log
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
-import com.machinelearning.playcarddetect.common.intOrString
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.OpenApp
 import com.machinelearning.playcarddetect.common.model.CardBase64
 import com.machinelearning.playcarddetect.common.setNotification
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction
 import com.machinelearning.playcarddetect.modules.datamanager.CaptureManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
-import com.machinelearning.playcarddetect.modules.datamanager.TextCollectionManager
 import com.machinelearning.playcarddetect.modules.datamanager.TextCollectionManager.CurrentPosition
+import com.nhatran241.accessibilityactionmodule.BaseActionService
+import com.nhatran241.accessibilityactionmodule.model.ClickAction
+import com.nhatran241.accessibilityactionmodule.model.SwipeAction
 import java.util.*
+import kotlin.math.log
 
-class ClientResponseDataService : AccessibilityService(){
+
+class ClientResponseDataService : BaseActionService(){
     companion object{
         var isConnected = false
         const val TAG ="acessibilityService"
@@ -37,7 +41,7 @@ class ClientResponseDataService : AccessibilityService(){
     private var screenWidth = 0
     private var screenHeight = 0
     private var currentPosition = CurrentPosition.Undetected
-    private var numberRoomRect = Rect(113,36,147,71)
+    private var numberRoomRect = Rect(113, 36, 147, 71)
 
     /**
      * Click
@@ -64,19 +68,27 @@ class ClientResponseDataService : AccessibilityService(){
         /**
          * Register Self device to server too handle remote event
          */
-        ServerClientDataManager.getInstance().ClientPushRoom("0",object:ServerClientDataManager.IClientCallbackToRoomPath{
-            override fun onSuccess() {
-                Log.d(TAG, "onServiceConnected")
-            }
-
-            override fun onFailed(error: String?) {
-
-                Log.d(TAG, "onServiceConnected: $error")
-            }
-
-        })
+//        ServerClientDataManager.getInstance().ClientPushRoom("0",object:ServerClientDataManager.IClientCallbackToRoomPath{
+//            override fun onSuccess() {
+//                Log.d(TAG, "onServiceConnected")
+//            }
+//
+//            override fun onFailed(error: String?) {
+//
+//                Log.d(TAG, "onServiceConnected: $error")
+//            }
+//
+//        })
         ServerClientDataManager.getInstance().ClientListenerToRemotePath {
-            Log.d(TAG, "onServiceConnected: $it")
+            if (it is OpenApp){
+                val launchIntent = packageManager.getLaunchIntentForPackage(it.packagename)
+                launchIntent?.let { startActivity(it) }
+            }else if (it is GestureAction){
+                Log.d(TAG, "onServiceConnected: $it")
+                performAction(mutableListOf(it)) { it ->
+                    Toast.makeText(this,it,Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
 //        ServerClientDataManager.getInstance().RegisterClientToRemoteServer(this,object:ServerClientDataManager.IRegisterClientToRemoteServer{
@@ -211,7 +223,7 @@ class ClientResponseDataService : AccessibilityService(){
 //    }
 
     private fun getNumberRoomBitmap(bitmap: Bitmap): Bitmap {
-            val numberRoomBitmap = Bitmap.createBitmap(bitmap, numberRoomRect.left,numberRoomRect.top,numberRoomRect.right-numberRoomRect.left,numberRoomRect.bottom-numberRoomRect.top)
+            val numberRoomBitmap = Bitmap.createBitmap(bitmap, numberRoomRect.left, numberRoomRect.top, numberRoomRect.right - numberRoomRect.left, numberRoomRect.bottom - numberRoomRect.top)
             bitmap.recycle()
             return numberRoomBitmap
     }

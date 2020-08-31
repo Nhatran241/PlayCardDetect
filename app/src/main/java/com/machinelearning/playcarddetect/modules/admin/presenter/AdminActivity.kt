@@ -8,9 +8,9 @@ import com.machinelearning.playcarddetect.R
 import com.machinelearning.playcarddetect.common.BaseActivity
 import com.machinelearning.playcarddetect.databinding.ActivitiyAdminBinding
 import com.machinelearning.playcarddetect.modules.admin.business.AdminActivityViewModel
-import com.machinelearning.playcarddetect.modules.admin.business.model.ClickAction
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager.*
+import com.nhatran241.accessibilityactionmodule.model.ClickAction
 
 class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataPath,IAdminListenerToRoomPath{
     lateinit var binding : ActivitiyAdminBinding
@@ -28,7 +28,6 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
     }
 
     override fun PrepareServer() {
-        showDialogLoading()
         serverClientDataManager.AdminListenerToDataPath(this)
         serverClientDataManager.AdminListenerToRoomPath(this)
      }
@@ -43,7 +42,7 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
             val entry = data.entries.iterator().next()
             val key = entry.key
             val value = entry.value
-            serverClientDataManager.AdminPushRemote(ClickAction(RectF(10f, 10f, 10f, 10f)),key, this)
+            serverClientDataManager.AdminPushRemote(ClickAction(RectF(1f,1f,1f,1f),0,200,0),"aa",this)
         }
     }
 
