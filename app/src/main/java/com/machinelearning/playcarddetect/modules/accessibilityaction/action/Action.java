@@ -2,6 +2,7 @@ package com.machinelearning.playcarddetect.modules.accessibilityaction.action;
 
  public class Action {
     public long actionTime = System.currentTimeMillis();
+    public ActionResponse actionResponse = ActionResponse.WAITING;
     public long delayTime = 50;
     public String actionType = "";
 

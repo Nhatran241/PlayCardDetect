@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ActionResponse
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction
 import io.reactivex.rxjava3.core.Observable
@@ -24,9 +25,9 @@ open class BaseActionService : AccessibilityService() {
     override fun onInterrupt() {
     }
 
-    fun performAction(actions: MutableList<GestureAction>, callback: ((String) -> Unit)) {
+    fun performAction(actions: MutableList<GestureAction>, callback: ((ActionResponse) -> Unit)) {
         if (actions.isEmpty()) {
-            callback.invoke(Response.COMPLETED.toString())
+            callback.invoke(ActionResponse.COMPLETED)
         } else {
                 val builder = GestureDescription.Builder()
                 val action = actions.first()
@@ -43,7 +44,7 @@ open class BaseActionService : AccessibilityService() {
 
                         override fun onCancelled(gestureDescription: GestureDescription) {
                             super.onCancelled(gestureDescription)
-                            callback.invoke(Response.FAILED.toString())
+                            callback.invoke(ActionResponse.FAILED)
                         }
                     }, null)
                 }.observeOn(Schedulers.io()).subscribe()
