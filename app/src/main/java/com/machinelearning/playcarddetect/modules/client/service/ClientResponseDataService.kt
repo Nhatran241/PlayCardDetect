@@ -15,6 +15,7 @@ import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataMa
 import com.machinelearning.playcarddetect.modules.datamanager.TextCollectionManager.CurrentPosition
 import com.machinelearning.playcarddetect.modules.accessibilityaction.BaseActionService
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.OpenApp
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction
 import java.util.*
 
@@ -78,15 +79,14 @@ class ClientResponseDataService : BaseActionService(){
 //        })
         ServerClientDataManager.getInstance().ClientListenerToRemotePath {
             Log.d(TAG, "onServiceConnected: $it")
-//            if (it is OpenApp){
-//                val launchIntent = packageManager.getLaunchIntentForPackage(it.packagename)
-//                launchIntent?.let { startActivity(it) }
-//            }else
-//            if (it is GestureAction){
-                performAction(it as MutableList<GestureAction>) {
+            if (it is OpenApp){
+                val launchIntent = packageManager.getLaunchIntentForPackage(it.packageName)
+                launchIntent?.let { startActivity(it) }
+            } else if (it is GestureAction){
+                performAction(mutableListOf(it)) {
                     ServerClientDataManager.getInstance().ClientPushRemoteResponse(it)
                 }
-//            }
+            }
         }
 
 //        ServerClientDataManager.getInstance().RegisterClientToRemoteServer(this,object:ServerClientDataManager.IRegisterClientToRemoteServer{

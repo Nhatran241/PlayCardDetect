@@ -9,13 +9,10 @@ import com.machinelearning.playcarddetect.R
 import com.machinelearning.playcarddetect.common.BaseActivity
 import com.machinelearning.playcarddetect.databinding.ActivitiyAdminBinding
 import com.machinelearning.playcarddetect.modules.accessibilityaction.Cons
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ActionResponse
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ClickAction
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.MultipleGestureAction
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.*
 import com.machinelearning.playcarddetect.modules.admin.business.AdminActivityViewModel
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager.*
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction
 
 class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataPath,IAdminListenerToRoomPath{
     lateinit var binding : ActivitiyAdminBinding
@@ -50,10 +47,11 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
 //            serverClientDataManager.AdminPushRemote(SwipeAction(RectF(500f,500f,500f,500f),
 //            RectF(0f,500f,0f,500f),0,100,5000), "a", this)
 //            serverClientDataManager.AdminPushRemote(ClickAction(RectF(500f,500f,500f,500f), 0,0,5000), "a", this)
-            var click1 = ClickAction(RectF(500f,500f,500f,500f),0,0,3000)
-            var click2 = ClickAction(RectF(500f,500f,500f,500f),0,0,3000)
-            var multiple = MultipleGestureAction(0, listOf(click1,click2), Cons.MutlpleGestureActionType)
-            serverClientDataManager.AdminPushRemote(multiple,"a",this)
+//            var click1 = ClickAction(RectF(500f,500f,500f,500f),0,0,3000)
+//            var click2 = ClickAction(RectF(500f,500f,500f,500f),0,0,3000)
+//            var multiple = MultipleGestureAction(0, listOf(click1,click2), Cons.MutlpleGestureActionType)
+              var packageName = OpenApp(3000,Cons.OpenAppActionType,"com.android.chrome")
+            serverClientDataManager.AdminPushRemote(packageName,"a",this)
         }
     }
 

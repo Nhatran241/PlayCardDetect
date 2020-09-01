@@ -155,7 +155,7 @@ public class ServerClientDataManager {
     public void ClientListenerToRemotePath(IClientListenerToRemotePath iClientListenerToRemotePath){
         db.collection(remotePath).document(deviceId).addSnapshotListener((documentSnapshot, e) -> {
             assert documentSnapshot != null;
-            List<Action> actions = ServerClientDataManagerExtKt.mappingActions(documentSnapshot,documentSnapshot.get(remotePath_actionType).toString());
+            Action actions = ServerClientDataManagerExtKt.mappingActions(documentSnapshot,documentSnapshot.get(remotePath_actionType).toString());
             iClientListenerToRemotePath.onRemote(actions);
         });
 
@@ -185,7 +185,7 @@ public class ServerClientDataManager {
      * Client Callback/Listener Interface
      */
     public interface IClientListenerToRemotePath{
-        void onRemote(List<Action> action);
+        void onRemote(Action action);
     }
     public interface IClientCallbackToDataPath{
         void onSuccess();
