@@ -1,29 +1,35 @@
 package com.machinelearning.playcarddetect.modules.datamanager
 
-import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.machinelearning.playcarddetect.modules.accessibilityaction.Cons
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.*
-import java.util.*
-import kotlin.collections.ArrayList
 
 
-fun mappingActions(documentSnapshot: DocumentSnapshot,actionType :String):MutableList<Action>{
-    val actions: MutableList<Action> = ArrayList()
+fun mappingActions(documentSnapshot: DocumentSnapshot,actionType :String):Action{
+//    val actions: MutableList<Action> = ArrayList()
     when(actionType){
         Cons.SwipeActionType ->{
             val swipeAction = documentSnapshot.toObject(SwipeAction::class.java)
             if (swipeAction!=null) {
                 swipeAction.path.moveTo(swipeAction.swipeStartRectF.centerX(), swipeAction.swipeStartRectF.centerY())
                 swipeAction.path.lineTo(swipeAction.swipeEndRectF.centerX(), swipeAction.swipeEndRectF.centerY())
-                actions.add(swipeAction)
+//                actions.add(swipeAction)
+                return swipeAction
             }
         }
         Cons.ClickActionType ->{
             val clickAction = documentSnapshot.toObject(ClickAction::class.java)
             if(clickAction!=null) {
                 clickAction.path.moveTo(clickAction.clickRectF.centerX(), clickAction.clickRectF.centerY())
-                actions.add(clickAction)
+//                actions.add(clickAction)
+                return clickAction
+            }
+        }
+        Cons.OpenAppActionType ->{
+            val openAppAction = documentSnapshot.toObject(OpenAppAction::class.java)
+            if(openAppAction!=null) {
+//                actions.add(openAppAction)
+                return openAppAction
             }
         }
         Cons.MutlpleGestureActionType -> {
@@ -44,8 +50,6 @@ fun mappingActions(documentSnapshot: DocumentSnapshot,actionType :String):Mutabl
 //            }
         }
     }
-    return actions;
-
-
+    return Action(0,Cons.EmptyActionType)
 }
 
