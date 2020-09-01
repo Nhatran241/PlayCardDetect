@@ -1,11 +1,8 @@
 package com.machinelearning.playcarddetect.modules.datamanager
 
-import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.machinelearning.playcarddetect.modules.accessibilityaction.Cons
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.*
-import java.util.*
-import kotlin.collections.ArrayList
 
 
 fun mappingActions(documentSnapshot: DocumentSnapshot,actionType :String):Action{
@@ -29,7 +26,7 @@ fun mappingActions(documentSnapshot: DocumentSnapshot,actionType :String):Action
             }
         }
         Cons.OpenAppActionType ->{
-            val openAppAction = documentSnapshot.toObject(OpenApp::class.java)
+            val openAppAction = documentSnapshot.toObject(OpenAppAction::class.java)
             if(openAppAction!=null) {
 //                actions.add(openAppAction)
                 return openAppAction

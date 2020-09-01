@@ -25,6 +25,7 @@ import com.machinelearning.playcarddetect.modules.accessibilityaction.action.Cli
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.MultipleGestureAction;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction;
+import com.machinelearning.playcarddetect.modules.client.DeviceStats;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -41,6 +42,7 @@ public class ServerClientDataManager {
     String remotePath ="Remote";
     private String remotePath_actionResponse ="actionResponse";;
     private String remotePath_actionType="actionType";
+    private String devicesPath_deviceStats="deviceStats";
     String roomPath = "Room";
     String dataPath = "Data";
     String devicesPath = "Devices";
@@ -76,24 +78,24 @@ public class ServerClientDataManager {
             }
         });
     }
-    public void AdminListenerToRoomPath(IAdminListenerToRoomPath iAdminListenerToRoomPath){
+    public void AdminListenerToDeviceStatsPath(IAdminListenerToDeviceStatsPath iAdminListenerToDeviceStatsPath){
         db.collection(devicesPath).addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                 Map<String,String> map = new HashMap<>();
                 for (DocumentSnapshot a:queryDocumentSnapshots.getDocuments()) {
-                    map.put(a.getId(),String.valueOf(a.get("currentroom")));
+                    map.put(a.getId(),String.valueOf(a.get(devicesPath_deviceStats)));
                 }
-                iAdminListenerToRoomPath.onRoom(map,e+"");
+                iAdminListenerToDeviceStatsPath.onDeviceStatsReponse(map,e+"");
             }
         });
     }
     public void AdminPushRemote(Action action, String deviceIdListenerAction, IAdminPutRemoteCallback iAdminPutRemoteCallback){
 //        Map<String,Action> map = new HashMap<>();
-        db.collection(remotePath).document(deviceId).set(action).addOnSuccessListener(new OnSuccessListener<Void>() {
+        db.collection(remotePath).document(deviceIdListenerAction).set(action).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                db.collection(remotePath).document(deviceId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                db.collection(remotePath).document(deviceIdListenerAction).addSnapshotListener(new EventListener<DocumentSnapshot>() {
                     @Override
                     public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
                         if(value.get(remotePath_actionResponse)!=null){
@@ -137,10 +139,10 @@ public class ServerClientDataManager {
             }
         });
     }
-    public void ClientPushRoom(String room,IClientCallbackToRoomPath iClientCallbackToRoomPath){
-        final Map<String, String> currentroom = new HashMap<>();
-        currentroom.put("currentroom",room);
-        db.collection(devicesPath).document(deviceId).set(currentroom,SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+    public void ClientPushDeviceStats(DeviceStats deviceStats, IClientCallbackToRoomPath iClientCallbackToRoomPath){
+        final Map<String, DeviceStats> deviceStatsMap = new HashMap<>();
+        deviceStatsMap.put(devicesPath_deviceStats,deviceStats);
+        db.collection(devicesPath).document(deviceId).set(deviceStatsMap,SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 iClientCallbackToRoomPath.onSuccess();
@@ -174,8 +176,8 @@ public class ServerClientDataManager {
     public interface IAdminListenerToDataPath{
         void onDataResponse(String data,@Nullable String message);
     }
-    public interface IAdminListenerToRoomPath{
-        void onRoom(Map<String,String> data,@Nullable String mesaage);
+    public interface IAdminListenerToDeviceStatsPath{
+        void onDeviceStatsReponse(Map<String,String> data,@Nullable String mesaage);
     }
     public interface IAdminPutRemoteCallback{
         void onAdminPutRemoteResponse(ActionResponse actionResponse,String deviceId);

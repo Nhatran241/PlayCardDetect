@@ -7,16 +7,13 @@ import android.os.Handler
 import android.util.Log
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
-import android.widget.Toast
 import com.machinelearning.playcarddetect.common.model.CardBase64
 import com.machinelearning.playcarddetect.common.setNotification
 import com.machinelearning.playcarddetect.modules.datamanager.CaptureManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.TextCollectionManager.CurrentPosition
 import com.machinelearning.playcarddetect.modules.accessibilityaction.BaseActionService
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.OpenApp
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction
+import com.machinelearning.playcarddetect.modules.client.DeviceStats
 import java.util.*
 
 
@@ -66,28 +63,22 @@ class ClientResponseDataService : BaseActionService(){
         /**
          * Register Self device to server too handle remote event
          */
-//        ServerClientDataManager.getInstance().ClientPushRoom("0",object:ServerClientDataManager.IClientCallbackToRoomPath{
-//            override fun onSuccess() {
-//                Log.d(TAG, "onServiceConnected")
-//            }
-//
-//            override fun onFailed(error: String?) {
-//
-//                Log.d(TAG, "onServiceConnected: $error")
-//            }
-//
-//        })
-        ServerClientDataManager.getInstance().ClientListenerToRemotePath {
-            Log.d(TAG, "onServiceConnected: $it")
-            if (it is OpenApp){
-                val launchIntent = packageManager.getLaunchIntentForPackage(it.packageName)
-                launchIntent?.let { startActivity(it) }
-            } else if (it is GestureAction){
-                performAction(mutableListOf(it)) {
-                    ServerClientDataManager.getInstance().ClientPushRemoteResponse(it)
+        ServerClientDataManager.getInstance().ClientPushDeviceStats(DeviceStats.NOTDETECTED,object:ServerClientDataManager.IClientCallbackToRoomPath{
+            override fun onSuccess() {
+                Log.d(TAG, "onServiceConnected")
+            }
+
+            override fun onFailed(error: String?) {
+
+                Log.d(TAG, "onServiceConnected: $error")
+            }
+
+        })
+        ServerClientDataManager.getInstance().ClientListenerToRemotePath { action ->
+            performAction(mutableListOf(action)) { response ->
+                    ServerClientDataManager.getInstance().ClientPushRemoteResponse(response)
                 }
             }
-        }
 
 //        ServerClientDataManager.getInstance().RegisterClientToRemoteServer(this,object:ServerClientDataManager.IRegisterClientToRemoteServer{
 //            override fun onRegisterClientToRemoteServerFailed(errro: String?) {
