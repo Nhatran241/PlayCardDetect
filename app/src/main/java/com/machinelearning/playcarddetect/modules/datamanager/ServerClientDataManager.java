@@ -17,16 +17,15 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.google.gson.Gson;
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.OpenApp;
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.Action;
 import com.machinelearning.playcarddetect.common.model.CardBase64;
-import com.nhatran241.accessibilityactionmodule.model.Action;
-import com.nhatran241.accessibilityactionmodule.model.ClickAction;
-import com.nhatran241.accessibilityactionmodule.model.SwipeAction;
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class ServerClientDataManager {
     private static ServerClientDataManager instance;
@@ -79,10 +78,9 @@ public class ServerClientDataManager {
             }
         });
     }
-    public void AdminPushRemote(Action action,String deviceIdListenerAction,IAdminPutRemoteCallback iAdminPutRemoteCallback){
-        Map<String,Action> map = new HashMap<>();
-        map.put("action",action);
-        db.collection(remotePath).document(deviceId).set(map).addOnSuccessListener(new OnSuccessListener<Void>() {
+    public void AdminPushRemote(Action action, String deviceIdListenerAction, IAdminPutRemoteCallback iAdminPutRemoteCallback){
+//        Map<String,Action> map = new HashMap<>();
+        db.collection(remotePath).document(deviceId).set(action).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 iAdminPutRemoteCallback.onPushSuccess();
@@ -137,16 +135,11 @@ public class ServerClientDataManager {
             @Override
             public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
                 assert documentSnapshot != null;
-                String json = documentSnapshot.get("action").toString();
-                Log.d("nhatnhat", "onEvent: "+json);
-                if(json.contains("packagename")){
-                    iClientListenerToRemotePath.onRemote(gson.fromJson(json,OpenApp.class));
-                }else if(json.contains("gesture")){
-                    if(json.contains("isSwipe")) {
-                        iClientListenerToRemotePath.onRemote(gson.fromJson(json, SwipeAction.class));
-                    }else {
-                        iClientListenerToRemotePath.onRemote(gson.fromJson(json,ClickAction.class));
-                    }
+                if(documentSnapshot.get("endRectF")!=null){
+                    SwipeAction swipeAction = documentSnapshot.toObject(SwipeAction.class);
+                    Objects.requireNonNull(swipeAction).getPath().moveTo(swipeAction.getStartRectF().centerX(),swipeAction.getStartRectF().centerY());
+                    Objects.requireNonNull(swipeAction).getPath().lineTo(swipeAction.getEndRectF().centerX(),swipeAction.getEndRectF().centerY());
+                    iClientListenerToRemotePath.onRemote(swipeAction);
                 }
             }
         });

@@ -10,7 +10,7 @@ import com.machinelearning.playcarddetect.databinding.ActivitiyAdminBinding
 import com.machinelearning.playcarddetect.modules.admin.business.AdminActivityViewModel
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager.*
-import com.nhatran241.accessibilityactionmodule.model.ClickAction
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction
 
 class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataPath,IAdminListenerToRoomPath{
     lateinit var binding : ActivitiyAdminBinding
@@ -38,11 +38,12 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
 
     override fun onRoom(data: MutableMap<String, String>?, mesaage: String?) {
         Log.d(TAG, "onRoom: $data/$mesaage")
-        if(data!=null) {
+        if (data != null) {
             val entry = data.entries.iterator().next()
             val key = entry.key
             val value = entry.value
-            serverClientDataManager.AdminPushRemote(ClickAction(RectF(1f,1f,1f,1f),0,200,0),"aa",this)
+            serverClientDataManager.AdminPushRemote(SwipeAction(RectF(500f,500f,500f,500f),
+            RectF(0f,500f,0f,500f),0,100,5000), "a", this)
         }
     }
 

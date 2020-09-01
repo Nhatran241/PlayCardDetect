@@ -1,16 +1,12 @@
-package com.nhatran241.accessibilityactionmodule
+package com.machinelearning.playcarddetect.modules.accessibilityaction
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
-import android.os.Handler
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction
-import com.nhatran241.accessibilityactionmodule.model.Action
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.schedulers.Schedulers
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 open class BaseActionService : AccessibilityService() {
@@ -27,14 +23,16 @@ open class BaseActionService : AccessibilityService() {
     override fun onInterrupt() {
     }
 
-    fun performAction(actions: MutableList<GestureAction>, callback: ((String) -> Unit)) {
+    fun performAction(actions: MutableList<SwipeAction>, callback: ((String) -> Unit)) {
         if (actions.isEmpty()) {
             callback.invoke(Response.COMPLETED.toString())
         } else {
-            val gestureDescription = actions[0].gestureDescription
-            if(gestureDescription!=null){
-                Log.d(TAG, "performAction: "+actions[0].toString()+gestureDescription)
-                Observable.timer(actions[0].delayTime, TimeUnit.MILLISECONDS).doOnComplete {
+                val builder = GestureDescription.Builder()
+                val action = actions.first()
+            Log.d(TAG, "performAction: perfromAction"+action.delayTime)
+            builder.addStroke(GestureDescription.StrokeDescription(action.path,action.startTime,action.durationTime))
+                var gestureDescription=builder.build()
+                Observable.timer(action.delayTime, TimeUnit.MILLISECONDS).doOnComplete {
                     dispatchGesture(gestureDescription, object : GestureResultCallback() {
                         override fun onCompleted(gestureDescription: GestureDescription) {
                             super.onCompleted(gestureDescription)
@@ -48,11 +46,6 @@ open class BaseActionService : AccessibilityService() {
                         }
                     }, null)
                 }.observeOn(Schedulers.io()).subscribe()
-            }else{
-                actions.removeFirst()
-                performAction(actions, callback)
-            }
-
         }
     }
 }

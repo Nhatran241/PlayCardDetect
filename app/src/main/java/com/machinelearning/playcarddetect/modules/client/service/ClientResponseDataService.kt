@@ -8,18 +8,14 @@ import android.util.Log
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.OpenApp
 import com.machinelearning.playcarddetect.common.model.CardBase64
 import com.machinelearning.playcarddetect.common.setNotification
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction
 import com.machinelearning.playcarddetect.modules.datamanager.CaptureManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.TextCollectionManager.CurrentPosition
-import com.nhatran241.accessibilityactionmodule.BaseActionService
-import com.nhatran241.accessibilityactionmodule.model.ClickAction
-import com.nhatran241.accessibilityactionmodule.model.SwipeAction
+import com.machinelearning.playcarddetect.modules.accessibilityaction.BaseActionService
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction
 import java.util.*
-import kotlin.math.log
 
 
 class ClientResponseDataService : BaseActionService(){
@@ -80,15 +76,16 @@ class ClientResponseDataService : BaseActionService(){
 //
 //        })
         ServerClientDataManager.getInstance().ClientListenerToRemotePath {
-            if (it is OpenApp){
-                val launchIntent = packageManager.getLaunchIntentForPackage(it.packagename)
-                launchIntent?.let { startActivity(it) }
-            }else if (it is GestureAction){
-                Log.d(TAG, "onServiceConnected: $it")
-                performAction(mutableListOf(it)) { it ->
+            Log.d(TAG, "onServiceConnected: "+it.delayTime)
+//            if (it is OpenApp){
+//                val launchIntent = packageManager.getLaunchIntentForPackage(it.packagename)
+//                launchIntent?.let { startActivity(it) }
+//            }else
+//            if (it is GestureAction){
+                performAction(mutableListOf(it as SwipeAction)) { it ->
                     Toast.makeText(this,it,Toast.LENGTH_SHORT).show()
                 }
-            }
+//            }
         }
 
 //        ServerClientDataManager.getInstance().RegisterClientToRemoteServer(this,object:ServerClientDataManager.IRegisterClientToRemoteServer{
