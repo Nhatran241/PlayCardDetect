@@ -1,21 +1,15 @@
 package com.machinelearning.playcarddetect.modules.accessibilityaction.action;
 
 
-import android.graphics.Path;
 import android.graphics.RectF;
 
-public class SwipeAction extends Action {
-    long durationTime = 10;
-    long startTime = 0;
-    RectF startRectF = new RectF();
-    RectF endRectF = new RectF();
-    private Path path = new Path();
-    public SwipeAction(RectF startRectF,RectF endRectF,long startTime,long durationTime, int delayTime) {
-        super(delayTime);
-        this.durationTime = durationTime;
-        this.startTime = startTime;
-        this.startRectF =startRectF;
-        this.endRectF = endRectF;
+public class SwipeAction extends GestureAction {
+    RectF swipeStartRectF = new RectF();
+    RectF swipeEndRectF = new RectF();
+    public SwipeAction(RectF swipeStartRectF,RectF swipeEndRectF, long startTime, long durationTime, int delayTime) {
+        super(startTime,durationTime,delayTime,"Swipe");
+        this.swipeStartRectF =swipeStartRectF;
+        this.swipeEndRectF = swipeEndRectF;
     }
 
     public SwipeAction() {
@@ -37,27 +31,19 @@ public class SwipeAction extends Action {
         this.startTime = startTime;
     }
 
-    public RectF getStartRectF() {
-        return startRectF;
+    public RectF getSwipeStartRectF() {
+        return swipeStartRectF;
     }
 
-    public void setStartRectF(RectF startRectF) {
-        this.startRectF = startRectF;
+    public void setSwipeStartRectF(RectF swipeStartRectF) {
+        this.swipeStartRectF = swipeStartRectF;
     }
 
-    public RectF getEndRectF() {
-        return endRectF;
+    public RectF getSwipeEndRectF() {
+        return swipeEndRectF;
     }
 
-    public void setEndRectF(RectF endRectF) {
-        this.endRectF = endRectF;
-    }
-
-    public Path getPath() {
-        return path;
-    }
-
-    public void setPath(Path path) {
-        this.path = path;
+    public void setSwipeEndRectF(RectF swipeEndRectF) {
+        this.swipeEndRectF = swipeEndRectF;
     }
 }

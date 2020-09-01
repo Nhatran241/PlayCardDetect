@@ -7,6 +7,7 @@ import androidx.databinding.DataBindingUtil
 import com.machinelearning.playcarddetect.R
 import com.machinelearning.playcarddetect.common.BaseActivity
 import com.machinelearning.playcarddetect.databinding.ActivitiyAdminBinding
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ClickAction
 import com.machinelearning.playcarddetect.modules.admin.business.AdminActivityViewModel
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager.*
@@ -42,8 +43,11 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
             val entry = data.entries.iterator().next()
             val key = entry.key
             val value = entry.value
-            serverClientDataManager.AdminPushRemote(SwipeAction(RectF(500f,500f,500f,500f),
-            RectF(0f,500f,0f,500f),0,100,5000), "a", this)
+//            serverClientDataManager.AdminPushRemote(SwipeAction(RectF(500f,500f,500f,500f),
+//            RectF(0f,500f,0f,500f),0,100,5000), "a", this)
+            serverClientDataManager.AdminPushRemote(ClickAction(RectF(500f,500f,500f,500f), 0,0,5000), "a", this)
+
+
         }
     }
 

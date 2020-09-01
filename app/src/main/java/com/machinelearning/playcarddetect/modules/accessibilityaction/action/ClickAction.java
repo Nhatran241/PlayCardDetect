@@ -4,15 +4,10 @@ package com.machinelearning.playcarddetect.modules.accessibilityaction.action;
 import android.graphics.Path;
 import android.graphics.RectF;
 
-public class ClickAction extends Action {
-    long durationTime = 10;
-    long startTime = 0;
+public class ClickAction extends GestureAction {
     RectF clickRectF = new RectF();
-    private Path path = new Path();
     public ClickAction(RectF clickRectF,long startTime, long durationTime, int delayTime) {
-        super(delayTime);
-        this.durationTime = durationTime;
-        this.startTime = startTime;
+        super(startTime,durationTime,delayTime,"Click");
         this.clickRectF =clickRectF;
     }
 
@@ -43,11 +38,4 @@ public class ClickAction extends Action {
         this.clickRectF = clickRectF;
     }
 
-    public Path getPath() {
-        return path;
-    }
-
-    public void setPath(Path path) {
-        this.path = path;
-    }
 }

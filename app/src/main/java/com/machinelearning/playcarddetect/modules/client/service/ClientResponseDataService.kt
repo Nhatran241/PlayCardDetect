@@ -14,6 +14,7 @@ import com.machinelearning.playcarddetect.modules.datamanager.CaptureManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.TextCollectionManager.CurrentPosition
 import com.machinelearning.playcarddetect.modules.accessibilityaction.BaseActionService
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction
 import java.util.*
 
@@ -82,7 +83,7 @@ class ClientResponseDataService : BaseActionService(){
 //                launchIntent?.let { startActivity(it) }
 //            }else
 //            if (it is GestureAction){
-                performAction(mutableListOf(it as SwipeAction)) { it ->
+                performAction(mutableListOf(it as GestureAction)) { it ->
                     Toast.makeText(this,it,Toast.LENGTH_SHORT).show()
                 }
 //            }

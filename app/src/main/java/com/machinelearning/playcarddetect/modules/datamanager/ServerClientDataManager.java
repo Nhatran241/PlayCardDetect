@@ -19,6 +19,7 @@ import com.google.firebase.firestore.SetOptions;
 import com.google.gson.Gson;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.Action;
 import com.machinelearning.playcarddetect.common.model.CardBase64;
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ClickAction;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction;
 
 import java.util.ArrayList;
@@ -135,11 +136,21 @@ public class ServerClientDataManager {
             @Override
             public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
                 assert documentSnapshot != null;
-                if(documentSnapshot.get("endRectF")!=null){
-                    SwipeAction swipeAction = documentSnapshot.toObject(SwipeAction.class);
-                    Objects.requireNonNull(swipeAction).getPath().moveTo(swipeAction.getStartRectF().centerX(),swipeAction.getStartRectF().centerY());
-                    Objects.requireNonNull(swipeAction).getPath().lineTo(swipeAction.getEndRectF().centerX(),swipeAction.getEndRectF().centerY());
-                    iClientListenerToRemotePath.onRemote(swipeAction);
+                switch (Objects.requireNonNull(documentSnapshot.get("actionType")).toString()){
+                    case "Swipe" :{
+                        SwipeAction swipeAction = documentSnapshot.toObject(SwipeAction.class);
+                        Objects.requireNonNull(swipeAction).getPath().moveTo(swipeAction.getSwipeStartRectF().centerX(),swipeAction.getSwipeStartRectF().centerY());
+                        Objects.requireNonNull(swipeAction).getPath().lineTo(swipeAction.getSwipeEndRectF().centerX(),swipeAction.getSwipeEndRectF().centerY());
+                        iClientListenerToRemotePath.onRemote(swipeAction);
+                        break;
+                    }
+                    case "Click" :{
+                        ClickAction clickAction = documentSnapshot.toObject(ClickAction.class);
+                        Objects.requireNonNull(clickAction).getPath().moveTo(clickAction.getClickRectF().centerX(),clickAction.getClickRectF().centerY());
+                        iClientListenerToRemotePath.onRemote(clickAction);
+                        break;
+                    }
+
                 }
             }
         });
