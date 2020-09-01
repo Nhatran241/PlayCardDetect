@@ -83,8 +83,8 @@ class ClientResponseDataService : BaseActionService(){
 //                launchIntent?.let { startActivity(it) }
 //            }else
 //            if (it is GestureAction){
-                performAction(mutableListOf(it as GestureAction)) { it ->
-                    Toast.makeText(this,it,Toast.LENGTH_SHORT).show()
+                performAction(mutableListOf(it as GestureAction)) {
+                    ServerClientDataManager.getInstance().ClientPushRemoteResponse(it)
                 }
 //            }
         }

@@ -19,8 +19,11 @@ import com.google.firebase.firestore.SetOptions;
 import com.google.gson.Gson;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.Action;
 import com.machinelearning.playcarddetect.common.model.CardBase64;
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ActionResponse;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ClickAction;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +36,7 @@ public class ServerClientDataManager {
     public static String RESPONSE_SUCCESS = "success";
     public static String RESPONSE_FAIL = "failed";
     String remotePath ="Remote";
+    public String remotePath_actionResponse ="actionResponse";
     String roomPath = "Room";
     String dataPath = "Data";
     String devicesPath = "Devices";
@@ -40,6 +44,7 @@ public class ServerClientDataManager {
     private String deviceId;
     private List<String> listDevice = new ArrayList<>();
     private Gson gson = new Gson();
+
     public static ServerClientDataManager getInstance() {
         if(instance==null)
             instance = new ServerClientDataManager();
@@ -84,12 +89,24 @@ public class ServerClientDataManager {
         db.collection(remotePath).document(deviceId).set(action).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                iAdminPutRemoteCallback.onPushSuccess();
+                db.collection(remotePath).document(deviceId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
+                        if(value.get(remotePath_actionResponse)!=null){
+                            ActionResponse actionResponse = ActionResponse.valueOf(Objects.requireNonNull(value.get(remotePath_actionResponse)).toString());
+                            if(actionResponse!=ActionResponse.WAITING){
+                                iAdminPutRemoteCallback.onAdminPutRemoteResponse(actionResponse,deviceIdListenerAction);
+                            }
+                        }else {
+                            iAdminPutRemoteCallback.onAdminPutRemoteResponse(ActionResponse.FAILED,deviceIdListenerAction);
+                        }
+                    }
+                });
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                iAdminPutRemoteCallback.onPushFailed(e.toString());
+                iAdminPutRemoteCallback.onAdminPutRemoteResponse(ActionResponse.FAILED,deviceIdListenerAction);
             }
         });
     }
@@ -132,21 +149,20 @@ public class ServerClientDataManager {
         });
     }
     public void ClientListenerToRemotePath(IClientListenerToRemotePath iClientListenerToRemotePath){
-        db.collection(remotePath).document(deviceId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                assert documentSnapshot != null;
-                switch (Objects.requireNonNull(documentSnapshot.get("actionType")).toString()){
-                    case "Swipe" :{
+        db.collection(remotePath).document(deviceId).addSnapshotListener((documentSnapshot, e) -> {
+            assert documentSnapshot != null;
+            if(Objects.equals(documentSnapshot.get(remotePath_actionResponse), ActionResponse.WAITING)) {
+                switch (Objects.requireNonNull(documentSnapshot.get("actionType")).toString()) {
+                    case "Swipe": {
                         SwipeAction swipeAction = documentSnapshot.toObject(SwipeAction.class);
-                        Objects.requireNonNull(swipeAction).getPath().moveTo(swipeAction.getSwipeStartRectF().centerX(),swipeAction.getSwipeStartRectF().centerY());
-                        Objects.requireNonNull(swipeAction).getPath().lineTo(swipeAction.getSwipeEndRectF().centerX(),swipeAction.getSwipeEndRectF().centerY());
+                        Objects.requireNonNull(swipeAction).getPath().moveTo(swipeAction.getSwipeStartRectF().centerX(), swipeAction.getSwipeStartRectF().centerY());
+                        Objects.requireNonNull(swipeAction).getPath().lineTo(swipeAction.getSwipeEndRectF().centerX(), swipeAction.getSwipeEndRectF().centerY());
                         iClientListenerToRemotePath.onRemote(swipeAction);
                         break;
                     }
-                    case "Click" :{
+                    case "Click": {
                         ClickAction clickAction = documentSnapshot.toObject(ClickAction.class);
-                        Objects.requireNonNull(clickAction).getPath().moveTo(clickAction.getClickRectF().centerX(),clickAction.getClickRectF().centerY());
+                        Objects.requireNonNull(clickAction).getPath().moveTo(clickAction.getClickRectF().centerX(), clickAction.getClickRectF().centerY());
                         iClientListenerToRemotePath.onRemote(clickAction);
                         break;
                     }
@@ -157,7 +173,11 @@ public class ServerClientDataManager {
 
     }
 
-
+    public void ClientPushRemoteResponse(@NotNull ActionResponse it) {
+        Map<String,ActionResponse> map =new HashMap<>();
+        map.put(remotePath_actionResponse,it);
+        db.collection(remotePath).document(deviceId).set(map,SetOptions.merge());
+    }
 
 
     /**
@@ -170,8 +190,7 @@ public class ServerClientDataManager {
         void onRoom(Map<String,String> data,@Nullable String mesaage);
     }
     public interface IAdminPutRemoteCallback{
-        void onPushSuccess();
-        void onPushFailed(String error);
+        void onAdminPutRemoteResponse(ActionResponse actionResponse,String deviceId);
     }
 
     /**

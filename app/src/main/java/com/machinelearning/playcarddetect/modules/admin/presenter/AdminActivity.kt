@@ -7,6 +7,7 @@ import androidx.databinding.DataBindingUtil
 import com.machinelearning.playcarddetect.R
 import com.machinelearning.playcarddetect.common.BaseActivity
 import com.machinelearning.playcarddetect.databinding.ActivitiyAdminBinding
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ActionResponse
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ClickAction
 import com.machinelearning.playcarddetect.modules.admin.business.AdminActivityViewModel
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
@@ -51,12 +52,11 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
         }
     }
 
-    override fun onPushSuccess() {
-        Log.d(TAG, "onPushSuccess: ")
-    }
+    override fun onAdminPutRemoteResponse(actionResponse: ActionResponse?, deviceId: String?) {
+        if (actionResponse != null) {
+            Log.d(TAG, "onAdminPutRemoteResponse: "+actionResponse.name+"/"+deviceId)
+        }
 
-    override fun onPushFailed(error: String?) {
-        Log.d(TAG, "onPushFailed: $error")
     }
 
 
