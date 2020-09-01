@@ -17,10 +17,13 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.google.gson.Gson;
+import com.machinelearning.playcarddetect.modules.accessibilityaction.Cons;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.Action;
 import com.machinelearning.playcarddetect.common.model.CardBase64;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ActionResponse;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ClickAction;
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction;
+import com.machinelearning.playcarddetect.modules.accessibilityaction.action.MultipleGestureAction;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction;
 
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +39,8 @@ public class ServerClientDataManager {
     public static String RESPONSE_SUCCESS = "success";
     public static String RESPONSE_FAIL = "failed";
     String remotePath ="Remote";
-    public String remotePath_actionResponse ="actionResponse";
+    private String remotePath_actionResponse ="actionResponse";;
+    private String remotePath_actionType="actionType";
     String roomPath = "Room";
     String dataPath = "Data";
     String devicesPath = "Devices";
@@ -151,24 +155,8 @@ public class ServerClientDataManager {
     public void ClientListenerToRemotePath(IClientListenerToRemotePath iClientListenerToRemotePath){
         db.collection(remotePath).document(deviceId).addSnapshotListener((documentSnapshot, e) -> {
             assert documentSnapshot != null;
-            if(Objects.equals(documentSnapshot.get(remotePath_actionResponse), ActionResponse.WAITING)) {
-                switch (Objects.requireNonNull(documentSnapshot.get("actionType")).toString()) {
-                    case "Swipe": {
-                        SwipeAction swipeAction = documentSnapshot.toObject(SwipeAction.class);
-                        Objects.requireNonNull(swipeAction).getPath().moveTo(swipeAction.getSwipeStartRectF().centerX(), swipeAction.getSwipeStartRectF().centerY());
-                        Objects.requireNonNull(swipeAction).getPath().lineTo(swipeAction.getSwipeEndRectF().centerX(), swipeAction.getSwipeEndRectF().centerY());
-                        iClientListenerToRemotePath.onRemote(swipeAction);
-                        break;
-                    }
-                    case "Click": {
-                        ClickAction clickAction = documentSnapshot.toObject(ClickAction.class);
-                        Objects.requireNonNull(clickAction).getPath().moveTo(clickAction.getClickRectF().centerX(), clickAction.getClickRectF().centerY());
-                        iClientListenerToRemotePath.onRemote(clickAction);
-                        break;
-                    }
-
-                }
-            }
+            List<Action> actions = ServerClientDataManagerExtKt.mappingActions(documentSnapshot,documentSnapshot.get(remotePath_actionType).toString());
+            iClientListenerToRemotePath.onRemote(actions);
         });
 
     }
@@ -197,7 +185,7 @@ public class ServerClientDataManager {
      * Client Callback/Listener Interface
      */
     public interface IClientListenerToRemotePath{
-        void onRemote(Action action);
+        void onRemote(List<Action> action);
     }
     public interface IClientCallbackToDataPath{
         void onSuccess();

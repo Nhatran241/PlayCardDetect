@@ -77,13 +77,13 @@ class ClientResponseDataService : BaseActionService(){
 //
 //        })
         ServerClientDataManager.getInstance().ClientListenerToRemotePath {
-            Log.d(TAG, "onServiceConnected: "+it.delayTime)
+            Log.d(TAG, "onServiceConnected: $it")
 //            if (it is OpenApp){
 //                val launchIntent = packageManager.getLaunchIntentForPackage(it.packagename)
 //                launchIntent?.let { startActivity(it) }
 //            }else
 //            if (it is GestureAction){
-                performAction(mutableListOf(it as GestureAction)) {
+                performAction(it as MutableList<GestureAction>) {
                     ServerClientDataManager.getInstance().ClientPushRemoteResponse(it)
                 }
 //            }
