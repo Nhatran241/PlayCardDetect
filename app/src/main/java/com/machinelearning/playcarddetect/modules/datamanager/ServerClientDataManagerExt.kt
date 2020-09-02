@@ -32,6 +32,20 @@ fun mappingActions(documentSnapshot: DocumentSnapshot,actionType :String):Action
                 return openAppAction
             }
         }
+        Cons.OpenGameMenuActionType ->{
+            val openGameMenuAction = documentSnapshot.toObject(OpenGameMenuAction::class.java)
+            if(openGameMenuAction!=null) {
+//                actions.add(openAppAction)
+                return openGameMenuAction
+            }
+        }
+        Cons.CaptureScreenActionType ->{
+            val captureScreenAction = documentSnapshot.toObject(CaptureScreenAction::class.java)
+            if(captureScreenAction!=null) {
+//                actions.add(openAppAction)
+                return captureScreenAction
+            }
+        }
         Cons.MutlpleGestureActionType -> {
             val multipleGestureAction = documentSnapshot.toObject(MultipleGestureAction::class.java)
 //            for (gestureAction in multipleGestureAction!!.gestureActionList) {

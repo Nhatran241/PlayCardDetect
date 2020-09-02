@@ -46,7 +46,7 @@ class ClientActivity :BaseActivity(){
             if (isGranted) {
                 captureManager.init(this@ClientActivity)
                 val intent = Intent(this@ClientActivity, ClientResponseDataService::class.java)
-                intent.action = Cons.CAPTURE
+                intent.action = Cons.STARTSERVICE
                 startService(intent)
             } else {
                 captureManager.requestScreenshotPermission(this@ClientActivity,REQUESTCAPTURE)

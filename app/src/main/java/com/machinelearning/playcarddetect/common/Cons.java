@@ -2,6 +2,7 @@ package com.machinelearning.playcarddetect.common;
 
 public class Cons {
     public static final String CAPTURE = "capture";
+    public static String STARTSERVICE = "startService";
     public static String RemoteClick = "remoteclick";
     public static String RemoteSwipe ="remoteswipe";
 public static String Action = "action";

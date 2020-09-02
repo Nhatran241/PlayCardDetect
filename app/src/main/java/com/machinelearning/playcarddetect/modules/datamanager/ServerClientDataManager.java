@@ -50,6 +50,7 @@ public class ServerClientDataManager {
     private String deviceId;
     private List<String> listDevice = new ArrayList<>();
     private Gson gson = new Gson();
+    private ArrayList<String> listDevicesAlreadyListener = new ArrayList<>();
 
     public static ServerClientDataManager getInstance() {
         if(instance==null)
@@ -90,29 +91,38 @@ public class ServerClientDataManager {
             }
         });
     }
-    public void AdminPushRemote(Action action, String deviceIdListenerAction, IAdminPutRemoteCallback iAdminPutRemoteCallback){
-//        Map<String,Action> map = new HashMap<>();
-        db.collection(remotePath).document(deviceIdListenerAction).set(action).addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                db.collection(remotePath).document(deviceIdListenerAction).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+    public void AdminListenerToRemotePath(String deviceIdListenerAction,IAdminPutRemoteCallback iAdminPutRemoteCallback){
+        if(listDevicesAlreadyListener.contains(deviceIdListenerAction))
+            return; //Admin already listener to this device
+        db.collection(remotePath).document(deviceIdListenerAction).addSnapshotListener(new EventListener<DocumentSnapshot>() {
                     @Override
                     public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
-                        if(value.get(remotePath_actionResponse)!=null){
+                        listDevicesAlreadyListener.add(deviceIdListenerAction);
+                        if(value.get(remotePath_actionResponse)!=null&&value.get(remotePath_actionType)!=null){
                             ActionResponse actionResponse = ActionResponse.valueOf(Objects.requireNonNull(value.get(remotePath_actionResponse)).toString());
                             if(actionResponse!=ActionResponse.WAITING){
-                                iAdminPutRemoteCallback.onAdminPutRemoteResponse(actionResponse,deviceIdListenerAction);
+                                iAdminPutRemoteCallback.onAdminPutRemoteResponse(actionResponse,value.get(remotePath_actionType).toString(),deviceIdListenerAction);
                             }
                         }else {
-                            iAdminPutRemoteCallback.onAdminPutRemoteResponse(ActionResponse.FAILED,deviceIdListenerAction);
+                            iAdminPutRemoteCallback.onAdminPutRemoteResponse(ActionResponse.FAILED,value.get(remotePath_actionType).toString(),deviceIdListenerAction);
                         }
                     }
                 });
+    }
+    public void AdminPushRemote(Action action, String deviceIdListenerAction, IAdminPutRemoteCallback iAdminPutRemoteCallback){
+//        Map<String,Action> map = new HashMap<>();
+        Log.d("admin_push_aciton", "AdminPushRemote: "+action.actionType);
+        if(action.actionType.equals(Cons.EmptyActionType))
+            return;
+        db.collection(remotePath).document(deviceIdListenerAction).set(action).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                iAdminPutRemoteCallback.onAdminPutRemoteResponse(ActionResponse.WAITING,action.actionType,deviceIdListenerAction);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                iAdminPutRemoteCallback.onAdminPutRemoteResponse(ActionResponse.FAILED,deviceIdListenerAction);
+                iAdminPutRemoteCallback.onAdminPutRemoteResponse(ActionResponse.FAILED,action.actionType,deviceIdListenerAction);
             }
         });
     }
@@ -157,8 +167,11 @@ public class ServerClientDataManager {
     public void ClientListenerToRemotePath(IClientListenerToRemotePath iClientListenerToRemotePath){
         db.collection(remotePath).document(deviceId).addSnapshotListener((documentSnapshot, e) -> {
             assert documentSnapshot != null;
-            Action actions = ServerClientDataManagerExtKt.mappingActions(documentSnapshot,documentSnapshot.get(remotePath_actionType).toString());
-            iClientListenerToRemotePath.onRemote(actions);
+            Log.d("clientListenerToRemotePath", "ClientListenerToRemotePath: "+documentSnapshot.get(remotePath_actionResponse)+"/"+ActionResponse.WAITING);
+            if(documentSnapshot.get(remotePath_actionResponse).toString().equals(ActionResponse.WAITING.name())) {
+                Action actions = ServerClientDataManagerExtKt.mappingActions(documentSnapshot, documentSnapshot.get(remotePath_actionType).toString());
+                iClientListenerToRemotePath.onRemote(actions);
+            }
         });
 
     }
@@ -180,7 +193,7 @@ public class ServerClientDataManager {
         void onDeviceStatsReponse(Map<String,String> data,@Nullable String mesaage);
     }
     public interface IAdminPutRemoteCallback{
-        void onAdminPutRemoteResponse(ActionResponse actionResponse,String deviceId);
+        void onAdminPutRemoteResponse(ActionResponse actionResponse,String actionType,String deviceId);
     }
 
     /**

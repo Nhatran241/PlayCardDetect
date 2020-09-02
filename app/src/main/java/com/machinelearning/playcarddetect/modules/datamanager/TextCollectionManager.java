@@ -52,6 +52,25 @@ public class TextCollectionManager {
             }
         });
     }
+    public void getTextFromBitmap(Bitmap bitmap,IGetTextListener iGetTextListener){
+        if(recognizer ==null)
+            recognizer = TextRecognition.getClient();
+        InputImage image = InputImage.fromBitmap(bitmap, 0);
+        recognizer.process(image)
+                .addOnSuccessListener(new OnSuccessListener<Text>() {
+                    @Override
+                    public void onSuccess(Text visionText) {
+                        iGetTextListener.onGetTextSuccess(visionText.getText());
+                    }
+                })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                iGetTextListener.onGetTextFailed(e.toString());
+                            }
+                        });
+    }
     public void process(Bitmap bitmap,ClientManagerListener clientManagerListener){
         if(recognizer ==null)
             recognizer = TextRecognition.getClient();
@@ -128,5 +147,9 @@ public class TextCollectionManager {
     public interface IGetNumberListener{
         void OnGetNumberSuccess(String roomNumber);
         void OnGetNumberFailed(String error);
+    }
+    public interface IGetTextListener{
+        void onGetTextSuccess(String text);
+        void onGetTextFailed(String error);
     }
 }
