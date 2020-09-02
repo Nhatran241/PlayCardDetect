@@ -2,6 +2,7 @@ package com.machinelearning.playcarddetect.modules.admin.presenter
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.machinelearning.playcarddetect.R
 import com.machinelearning.playcarddetect.common.BaseActivity
@@ -43,14 +44,22 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
             val entry = data.entries.iterator().next()
             val deviceId = entry.key
             val stats = entry.value
-            serverClientDataManager.AdminPushRemote(handleAction(DeviceStats.valueOf(stats)),deviceId,this)
+            Log.d(TAG, "onDeviceStatsReponse: "+handleClientActionWithDeviceStats(DeviceStats.valueOf(stats)).toString()+"/"+deviceId)
+            serverClientDataManager.AdminPushRemote(handleClientActionWithDeviceStats(DeviceStats.valueOf(stats)),deviceId,this)
         }
     }
 
-    override fun onAdminPutRemoteResponse(actionResponse: ActionResponse?, deviceId: String?) {
-        if (actionResponse != null) {
-            Log.d(TAG, "onAdminPutRemoteResponse: "+actionResponse.name+"/"+deviceId)
+    override fun onAdminPutRemoteResponse(actionResponse: ActionResponse?, actionType: String?, deviceId: String?) {
+        serverClientDataManager.AdminListenerToRemotePath(deviceId,this)
+        if(actionResponse!=null && actionType != null) {
+            if(actionResponse != ActionResponse.WAITING) {
+                adminPerformSelfAction(handleAdminActionWithResponse(actionType, actionResponse))
+                serverClientDataManager.AdminPushRemote(handleClientActionWithResponse(actionType, actionResponse), deviceId, this)
+            }
         }
+    }
+
+    private fun adminPerformSelfAction(handleAdminActionWithResponse: Action) {
 
     }
 

@@ -7,5 +7,7 @@ public class Cons {
     public static String ClickActionType = "Click";
     public static String SwipeActionType = "Swipe";
     public static String OpenAppActionType ="OpenApp";
+    public static String OpenGameMenuActionType ="OpenGameMenu";
+    public static String CaptureScreenActionType ="CaptureScreen";
     public static String EmptyActionType ="Empty";
 }
