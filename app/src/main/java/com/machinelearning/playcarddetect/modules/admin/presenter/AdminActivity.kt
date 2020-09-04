@@ -50,13 +50,13 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
     }
 
     override fun onAdminPutRemoteResponse(actionResponse: ActionResponse?, actionType: String?, deviceId: String?) {
-        serverClientDataManager.AdminListenerToRemotePath(deviceId,this)
-        if(actionResponse!=null && actionType != null) {
-            if(actionResponse != ActionResponse.WAITING) {
-                adminPerformSelfAction(handleAdminActionWithResponse(actionType, actionResponse))
-                serverClientDataManager.AdminPushRemote(handleClientActionWithResponse(actionType, actionResponse), deviceId, this)
-            }
-        }
+//        serverClientDataManager.AdminListenerToRemotePath(deviceId,this)
+//        if(actionResponse!=null && actionType != null) {
+//            if(actionResponse != ActionResponse.WAITING) {
+//                adminPerformSelfAction(handleAdminActionWithResponse(actionType, actionResponse))
+//                serverClientDataManager.AdminPushRemote(handleClientActionWithResponse(actionType, actionResponse), deviceId, this)
+//            }
+//        }
     }
 
     private fun adminPerformSelfAction(handleAdminActionWithResponse: Action) {

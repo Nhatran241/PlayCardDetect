@@ -6,8 +6,8 @@ import android.graphics.RectF;
 
 public class ClickAction extends GestureAction {
     RectF clickRectF = new RectF();
-    public ClickAction(RectF clickRectF,long startTime, long durationTime, int delayTime) {
-        super(startTime,durationTime,delayTime,"Click");
+    public ClickAction(RectF clickRectF,long startTime, long durationTime, int delayTime,String actionType) {
+        super(startTime,durationTime,delayTime,actionType);
         this.clickRectF =clickRectF;
     }
 

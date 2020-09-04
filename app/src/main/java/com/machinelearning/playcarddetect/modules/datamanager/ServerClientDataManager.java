@@ -55,7 +55,6 @@ public class ServerClientDataManager {
     public static ServerClientDataManager getInstance() {
         if(instance==null)
             instance = new ServerClientDataManager();
-
         return instance;
     }
 
@@ -149,18 +148,18 @@ public class ServerClientDataManager {
             }
         });
     }
-    public void ClientPushDeviceStats(DeviceStats deviceStats, IClientCallbackToRoomPath iClientCallbackToRoomPath){
+    public void ClientPushDeviceStats(DeviceStats deviceStats, IClientPushDeviceStatsCallback iClientPushDeviceStatsCallback){
         final Map<String, DeviceStats> deviceStatsMap = new HashMap<>();
         deviceStatsMap.put(devicesPath_deviceStats,deviceStats);
         db.collection(devicesPath).document(deviceId).set(deviceStatsMap,SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                iClientCallbackToRoomPath.onSuccess();
+                iClientPushDeviceStatsCallback.onResponse(ActionResponse.COMPLETED,deviceStats);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                iClientCallbackToRoomPath.onFailed(e.toString());
+                iClientPushDeviceStatsCallback.onResponse(ActionResponse.FAILED,deviceStats);
             }
         });
     }
@@ -176,10 +175,20 @@ public class ServerClientDataManager {
 
     }
 
-    public void ClientPushRemoteResponse(@NotNull ActionResponse it) {
+    public void ClientPushRemoteResponse(@NotNull ActionResponse it,IClientPushRemoteResponseCallback iClientPushRemoteResponseCallback) {
         Map<String,ActionResponse> map =new HashMap<>();
         map.put(remotePath_actionResponse,it);
-        db.collection(remotePath).document(deviceId).set(map,SetOptions.merge());
+        db.collection(remotePath).document(deviceId).set(map,SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                iClientPushRemoteResponseCallback.onResponse(ActionResponse.COMPLETED);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                iClientPushRemoteResponseCallback.onResponse(ActionResponse.FAILED);
+            }
+        });
     }
 
 
@@ -206,9 +215,11 @@ public class ServerClientDataManager {
         void onSuccess();
         void onFailed(String error);
     }
-    public interface IClientCallbackToRoomPath{
-        void onSuccess();
-        void onFailed(String error);
+    public interface IClientPushDeviceStatsCallback{
+        void onResponse(ActionResponse actionResponse,DeviceStats deviceStats);
+    }
+    public interface IClientPushRemoteResponseCallback{
+        void onResponse(ActionResponse actionResponse);
     }
 
 }

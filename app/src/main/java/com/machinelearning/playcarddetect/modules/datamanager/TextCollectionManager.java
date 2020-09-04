@@ -60,6 +60,9 @@ public class TextCollectionManager {
                 .addOnSuccessListener(new OnSuccessListener<Text>() {
                     @Override
                     public void onSuccess(Text visionText) {
+                        for (Text.TextBlock textblock: visionText.getTextBlocks()) {
+                            Log.d("nhatnhattextblock", "onSuccess: "+textblock.getText()+":"+textblock.getBoundingBox().centerX()+"/"+textblock.getBoundingBox().centerY());
+                        }
                         iGetTextListener.onGetTextSuccess(visionText.getText());
                     }
                 })

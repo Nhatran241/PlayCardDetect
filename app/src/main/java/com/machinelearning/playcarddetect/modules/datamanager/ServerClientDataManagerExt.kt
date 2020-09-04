@@ -46,6 +46,14 @@ fun mappingActions(documentSnapshot: DocumentSnapshot,actionType :String):Action
                 return captureScreenAction
             }
         }
+        Cons.OpenChonBanActionType ->{
+            val openChonBanScreenAction = documentSnapshot.toObject(OpenChonBanScreenAction::class.java)
+            if(openChonBanScreenAction!=null) {
+                openChonBanScreenAction.path.moveTo(openChonBanScreenAction.clickRectF.centerX(), openChonBanScreenAction.clickRectF.centerY())
+//                actions.add(clickAction)
+                return openChonBanScreenAction
+            }
+        }
         Cons.MutlpleGestureActionType -> {
             val multipleGestureAction = documentSnapshot.toObject(MultipleGestureAction::class.java)
 //            for (gestureAction in multipleGestureAction!!.gestureActionList) {

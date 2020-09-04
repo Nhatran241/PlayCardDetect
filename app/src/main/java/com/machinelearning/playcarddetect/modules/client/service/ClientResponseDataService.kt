@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Point
 import android.graphics.Rect
+import android.graphics.RectF
 import android.os.Handler
 import android.util.Log
 import android.view.WindowManager
@@ -26,7 +27,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-class ClientResponseDataService : BaseActionService(){
+class ClientResponseDataService : BaseActionService(),ServerClientDataManager.IClientPushDeviceStatsCallback{
     companion object{
         var isConnected = false
         const val TAG ="acessibilityService"
@@ -66,79 +67,41 @@ class ClientResponseDataService : BaseActionService(){
                     screenHeight = size.y
                 }
 
-
+                captureManager = CaptureManager.getInstance()
+                startCapture()
                 /**
                  * Register Self device to server too handle remote event
                  */
-                ServerClientDataManager.getInstance().ClientPushDeviceStats(DeviceStats.NOTDETECTED, object : ServerClientDataManager.IClientCallbackToRoomPath {
-                    override fun onSuccess() {
-                        Log.d(TAG, "onServiceConnected")
-                        ServerClientDataManager.getInstance().ClientListenerToRemotePath { action ->
-                            Log.d(TAG, "onSuccess: "+action.actionType)
-                            performAction(mutableListOf(action)) { response ->
-                                ServerClientDataManager.getInstance().ClientPushRemoteResponse(response)
-                            }
+//                var click = ClickAction(RectF(1400f,300f,1400f,300f),0,100,5000,Cons.ClickActionType)
+//                click.path.moveTo(click.clickRectF.centerX(),click.clickRectF.centerY())
+//                performAction(mutableListOf(click)){
+//
+//                }
+                ServerClientDataManager.getInstance().ClientPushDeviceStats(DeviceStats.NOTDETECTED){ actionResponse, deviceStats ->
+                    ServerClientDataManager.getInstance().ClientListenerToRemotePath { action ->
+                        Log.d(TAG, "onSuccess: " + action.actionType)
+                        performAction(mutableListOf(action)) { response ->
+                            ServerClientDataManager.getInstance().ClientPushDeviceStats(mappingDeviceStats(action, response),this)
                         }
                     }
-
-                    override fun onFailed(error: String?) {
-
-                        Log.d(TAG, "onServiceConnected: $error")
-                    }
-
-                })
-
-
+                }
             }
         }
         return super.onStartCommand(intent, flags, startId)
     }
+    override fun onResponse(actionResponse: ActionResponse?, deviceStats: DeviceStats?) {
+//        when(deviceStats){
+//            DeviceStats.NOTDETECTED ->{
+//
+//            }
+//        }
+
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         setNotification()
         isConnected = true
-        captureManager = CaptureManager.getInstance()
-        startCapture()
-
-//        ServerClientDataManager.getInstance().RegisterClientToRemoteServer(this,object:ServerClientDataManager.IRegisterClientToRemoteServer{
-//            override fun onRegisterClientToRemoteServerFailed(errro: String?) {
-//                Toast.makeText(this@ClientResponseDataService,""+errro,Toast.LENGTH_SHORT).show()
-//            }
-//
-//            override fun onRegisterClientToRemoteServerSuccess() {
-//                Log.d("nhatnhat","Successs")
-//            }
-//
-//            override fun onReponseFromRemoteServer(action: String?) {
-//                Log.d("nhatnhat", "Action $action")
-//            }
-//
-//        })
-//
-
-
-//        getInstance().prepareClientServer(this, false, object : IClientPrepareListener {
-//            override fun OnPrepareClientServerSuccess() {
-//                getInstance().RegisterClientListenerWithServer(object : IClientListener {
-//                    override fun OnServerClickCard(position: Int) {
-//                        currentPosition = CurrentPosition.PLaying
-//                        val cardRect = listCardInHand[position].cardRect
-//                        var y = newHeight - newHeight / 3 + cardRect.top + cardRect.centerY()
-//                        var x = cardRect.centerX() //512/1024
-//                        // ? /1570
-//                        (x *= screenWidth.toDouble() / newWidth).toInt()
-//                        (y *= screenHeight.toDouble() / newHeight).toInt()
-//                        click(x, y)
-//                    }
-//
-//                    override fun OnServerClickXepBai() {}
-//                })
-//            }
-//
-//            override fun OnPrepareClientServerFail(error: String) {
-//                Toast.makeText(this@ClientService, "" + error, Toast.LENGTH_SHORT).show()
-//            }
-//        })
     }
 
     private fun startCapture() {
@@ -214,7 +177,7 @@ class ClientResponseDataService : BaseActionService(){
                         }
                     }else if(action is CaptureScreenAction){
                         Log.d(TAG, "performAction: capturescreen")
-                        captureManager!!.takeScreenshot()
+//                        startCapture()
                         actions.removeFirst()
                         performAction(actions, callback)
                     }else if(action is OpenGameMenuAction){
@@ -240,142 +203,6 @@ class ClientResponseDataService : BaseActionService(){
             }
     }
 
-//    private fun click(x: Int, y: Int) {
-//        val builder = GestureDescription.Builder()
-//        val path = Path()
-//        path.moveTo(x.toFloat(), y.toFloat())
-//        builder.addStroke(StrokeDescription(path, 0, 300))
-//        val gestureDescription = builder.build()
-//        val result = dispatchGesture(gestureDescription, object : GestureResultCallback() {
-//            override fun onCompleted(gestureDescription: GestureDescription) {
-//                super.onCompleted(gestureDescription)
-//                Toast.makeText(this@ClientService, "Click compeleted", Toast.LENGTH_SHORT).show()
-//            }
-//
-//            override fun onCancelled(gestureDescription: GestureDescription) {
-//                super.onCancelled(gestureDescription)
-//                Log.d("nhatnhat", "onStartCommand: $gestureDescription")
-//            }
-//        }, null)
-//        Log.d("nhatnhat", "onStartCommand:3$result")
-//    }
-
-//    private fun checkRoomNumber(bitmap: Bitmap) {
-//        val bitmapForOcr = getNumberRoomBitmap(bitmap)
-//            TextCollectionManager.getInstance().getRoomNumber(bitmapForOcr, object : TextCollectionManager.IGetNumberListener {
-//                override fun OnGetNumberSuccess(text: String?) {
-//                    bitmapForOcr.recycle()
-//                    Log.d("getRoomNumber", "onSuccess: $text")
-//                    var roomnumber = text?.intOrString()
-//                    if(roomnumber is Int){
-//                        Log.d("getRoomNumber", "onSuccess: $roomnumber")
-//                        ServerClientDataManager.getInstance().RegisterClientToRoom(baseContext,roomnumber)
-//                    }else{
-//                        //
-//                    }
-//                    captureManager?.takeScreenshot()
-//
-//                }
-//
-//                override fun OnGetNumberFailed(error: String?) {
-//                    bitmapForOcr.recycle()
-//                    Log.d("getRoomNumber", "error: $error")
-//                    captureManager?.takeScreenshot()
-//                }
-//
-//            })
-////        TextCollectionManager.getInstance().get(bitmapForOcr) { currentPosition: CurrentPosition, postionClick: IntArray? ->
-////            bitmapForOcr.recycle()
-////            if (currentPosition == CurrentPosition.PLaying) {
-////                prepareAndPutData(bitmap)
-////            } else captureManager!!.takeScreenshot()
-////        }
-//    }
-
-    private fun getNumberRoomBitmap(bitmap: Bitmap): Bitmap {
-            val numberRoomBitmap = Bitmap.createBitmap(bitmap, numberRoomRect.left, numberRoomRect.top, numberRoomRect.right - numberRoomRect.left, numberRoomRect.bottom - numberRoomRect.top)
-            bitmap.recycle()
-            return numberRoomBitmap
-    }
-
-//    private fun prepareAndPutData(bitmap: Bitmap) {
-//        val cardsInHandZone = Rect()
-//        val listCardsInHand: MutableList<CardBase64> = ArrayList()
-//        /**
-//         * Chỉnh Bitmap về kích thước hợp lý nhất
-//         */
-//        scaleRatio = bitmap.width * 1f / bitmap.height * 1f
-//        newHeight = bitmap.height
-//        newWidth = bitmap.width
-//        if (scaleRatio > 0) {
-//            newWidth = 1024
-//            newHeight = (newHeight / scaleRatio).toInt()
-//        }
-//        val newBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, false)
-//
-//        /**
-//         * Cắt nhỏ Bitmap về khu vực lá bài trên tay
-//         */
-//        val handCardsBitmap = Bitmap.createBitmap(newBitmap, 0, newHeight - newHeight / 3, newWidth, newHeight / 3)
-//        bitmap.recycle()
-//        newBitmap.recycle()
-//        listCardsInHand.addAll(CardCollectionManager.getInstance().getCardsZoneBitmap(this, handCardsBitmap, cardsInHandZone, 220, 230))
-//        handCardsBitmap.recycle()
-//        if (listCardsInHand.size > 0) {
-////                        if(listCardInHand.size() ==0){
-////                            listCardInHand.addAll(listCardsInHand);
-////                            ServerClientDataManager.getInstance().putClientHandCards(listCardInHand, new ServerClientDataManager.IClientPutValueListener() {
-////                                @Override
-////                                public void OnClientPutValueSuccess() {
-////                                    captureManager.takeScreenshot();
-////                                }
-////
-////                                @Override
-////                                public void OnClientPutValueFail(String error) {
-////                                    Toast.makeText(ClientService.this, ""+error, Toast.LENGTH_SHORT).show();
-////                                }
-////                            });
-////                        }else {
-//            if (listCardsInHand.size == listCardInHand.size) {
-////                                boolean notMatch=false;
-////                                for (int i = 0; i <listCardsInHand.size() ; i++) {
-////                                    if(!listCardsInHand.get(i).getCardRect().equals(listCardInHand.get(i).getCardLevel())||
-////                                            !listCardsInHand.get(i).getCardsuit().equals(listCardInHand.get(i).getCardsuit())||
-////                                            !listCardsInHand.get(i).getCardRect().equals(listCardInHand.get(i).getCardRect())){
-////                                        notMatch=true;
-////                                        break;
-////                                    }
-////                                }
-////                                if(notMatch){
-////                                    ServerClientDataManager.getInstance().putClientHandCards(listCardInHand, new ServerClientDataManager.IClientPutValueListener() {
-////                                        @Override
-////                                        public void OnClientPutValueSuccess() {
-////                                            captureManager.takeScreenshot();
-////                                        }
-////
-////                                        @Override
-////                                        public void OnClientPutValueFail(String error) {
-////                                            Toast.makeText(ClientService.this, "" + error, Toast.LENGTH_SHORT).show();
-////                                        }
-////                                    });
-////                                }else {
-//                captureManager!!.takeScreenshot()
-//                //                                }
-//            } else {
-//                listCardInHand.clear()
-//                listCardInHand.addAll(listCardsInHand)
-//                getInstance().putClientHandCards(listCardInHand, object : IClientPutValueListener {
-//                    override fun OnClientPutValueSuccess() {
-//                        captureManager!!.takeScreenshot()
-//                    }
-//
-//                    override fun OnClientPutValueFail(error: String) {
-//                        Toast.makeText(this@ClientService, "" + error, Toast.LENGTH_SHORT).show()
-//                    }
-//                })
-//            }
-//        } else captureManager!!.takeScreenshot()
-//    }
 
 
 }
