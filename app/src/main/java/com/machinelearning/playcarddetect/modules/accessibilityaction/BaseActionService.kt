@@ -23,6 +23,6 @@ abstract class BaseActionService : AccessibilityService() {
     override fun onInterrupt() {
     }
 
-    abstract fun performAction(actions: MutableList<Action>, callback: ((ActionResponse) -> Unit))
+    abstract fun performAction(actions: MutableList<Action>,message : String, callback: ((ActionResponse,String) -> Unit))
 
 }

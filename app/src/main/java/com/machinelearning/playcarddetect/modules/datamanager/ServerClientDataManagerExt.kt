@@ -1,5 +1,6 @@
 package com.machinelearning.playcarddetect.modules.datamanager
 
+import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.machinelearning.playcarddetect.modules.accessibilityaction.Cons
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.*
@@ -46,14 +47,15 @@ fun mappingActions(documentSnapshot: DocumentSnapshot,actionType :String):Action
                 return captureScreenAction
             }
         }
-        Cons.OpenChonBanActionType ->{
-            val openChonBanScreenAction = documentSnapshot.toObject(OpenChonBanScreenAction::class.java)
-            if(openChonBanScreenAction!=null) {
-                openChonBanScreenAction.path.moveTo(openChonBanScreenAction.clickRectF.centerX(), openChonBanScreenAction.clickRectF.centerY())
+        Cons.OpenChonBanActionType,Cons.OpenTaoBanActionType,Cons.ClickDongYTaoBanActionType -> {
+            val clickActionWithVerify = documentSnapshot.toObject(ClickActionWithVerify::class.java)
+            if (clickActionWithVerify != null) {
+                clickActionWithVerify.path.moveTo(clickActionWithVerify.clickRectF.centerX(), clickActionWithVerify.clickRectF.centerY())
 //                actions.add(clickAction)
-                return openChonBanScreenAction
+                return clickActionWithVerify
             }
         }
+
         Cons.MutlpleGestureActionType -> {
             val multipleGestureAction = documentSnapshot.toObject(MultipleGestureAction::class.java)
 //            for (gestureAction in multipleGestureAction!!.gestureActionList) {

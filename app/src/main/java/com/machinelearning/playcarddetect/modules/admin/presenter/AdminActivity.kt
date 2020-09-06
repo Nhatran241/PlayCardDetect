@@ -2,15 +2,14 @@ package com.machinelearning.playcarddetect.modules.admin.presenter
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.machinelearning.playcarddetect.R
 import com.machinelearning.playcarddetect.common.BaseActivity
 import com.machinelearning.playcarddetect.databinding.ActivitiyAdminBinding
-import com.machinelearning.playcarddetect.modules.accessibilityaction.Cons
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.*
 import com.machinelearning.playcarddetect.modules.admin.business.AdminActivityViewModel
-import com.machinelearning.playcarddetect.modules.client.DeviceStats
+import com.machinelearning.playcarddetect.modules.client.DeviceState
+import com.machinelearning.playcarddetect.modules.client.DeviceStateBundle
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager.*
 
@@ -38,14 +37,14 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
         Log.d(TAG, "onDataResponse: $data/$message")
     }
 
-    override fun onDeviceStatsReponse(data: MutableMap<String, String>?, mesaage: String?) {
+    override fun onDeviceStatsReponse(data: MutableMap<String, DeviceStateBundle>?, mesaage: String?) {
         Log.d(TAG, "onRoom: $data/$mesaage")
         if (data != null) {
             val entry = data.entries.iterator().next()
             val deviceId = entry.key
-            val stats = entry.value
-            Log.d(TAG, "onDeviceStatsReponse: "+handleClientActionWithDeviceStats(DeviceStats.valueOf(stats)).toString()+"/"+deviceId)
-            serverClientDataManager.AdminPushRemote(handleClientActionWithDeviceStats(DeviceStats.valueOf(stats)),deviceId,this)
+            val deviceStateBundle = entry.value
+            Log.d(TAG, "onDeviceStatsReponse: "+handleClientActionWithDeviceStats(deviceStateBundle.deviceState).toString()+"/"+deviceId)
+            serverClientDataManager.AdminPushRemote(handleClientActionWithDeviceStats(deviceStateBundle.deviceState),deviceId,this)
         }
     }
 

@@ -1,23 +1,36 @@
 package com.machinelearning.playcarddetect.modules.client.service
 
 import com.machinelearning.playcarddetect.modules.accessibilityaction.BaseActionService
+import com.machinelearning.playcarddetect.modules.accessibilityaction.Cons
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.*
-import com.machinelearning.playcarddetect.modules.client.DeviceStats
+import com.machinelearning.playcarddetect.modules.client.DeviceState
+import com.machinelearning.playcarddetect.modules.client.DeviceStateBundle
 
-fun BaseActionService.mappingDeviceStats(action :Action,actionResponse: ActionResponse):DeviceStats{
+fun BaseActionService.mappingDeviceStats(action :Action,actionResponse: ActionResponse,message : String):DeviceStateBundle{
     when(action){
         is OpenAppAction -> {
-            if(actionResponse == ActionResponse.COMPLETED) return DeviceStats.DEVICE_OPENAPP_COMPLETED else DeviceStats.DEVICE_OPENAPP_FAILED
+            if(actionResponse == ActionResponse.COMPLETED) return DeviceStateBundle(DeviceState.DEVICE_OPENAPP_COMPLETED,message) else DeviceStateBundle(DeviceState.DEVICE_OPENAPP_FAILED,message)
         }
         is CaptureScreenAction ->{
-            if(actionResponse == ActionResponse.COMPLETED) return DeviceStats.DEVICE_STARTCAPTURE_COMPLETED else DeviceStats.DEVICE_STARTCAPTURE_FAILED
+            if(actionResponse == ActionResponse.COMPLETED) return DeviceStateBundle(DeviceState.DEVICE_STARTCAPTURE_COMPLETED,message) else DeviceStateBundle(DeviceState.DEVICE_STARTCAPTURE_FAILED,message)
         }
         is OpenGameMenuAction ->{
-            if(actionResponse == ActionResponse.COMPLETED) return DeviceStats.DEVICE_OPENGAMEMENU_COMPLETED else DeviceStats.DEVICE_OPENGAMEMENU_FAILED
+            if(actionResponse == ActionResponse.COMPLETED) return DeviceStateBundle(DeviceState.DEVICE_OPENGAMEMENU_COMPLETED,message) else DeviceStateBundle(DeviceState.DEVICE_OPENGAMEMENU_FAILED,message)
         }
-        is OpenChonBanScreenAction ->{
-            if(actionResponse == ActionResponse.COMPLETED) return DeviceStats.DEVICE_OPENCHONBANSCREEN_COMPLETED else DeviceStats.DEIVCE_OPENCHONBANSCREEN_FAILED
+        is ClickActionWithVerify ->{
+            when(action.actionType){
+                Cons.OpenChonBanActionType -> {
+                    if(actionResponse == ActionResponse.COMPLETED) return DeviceStateBundle(DeviceState.DEVICE_OPENCHONBANSCREEN_COMPLETED,message) else DeviceStateBundle(DeviceState.DEIVCE_OPENCHONBANSCREEN_FAILED,message)
+                }
+                Cons.OpenTaoBanActionType -> {
+                    if(actionResponse == ActionResponse.COMPLETED) return DeviceStateBundle(DeviceState.DEVICE_OPENTAOBANSCREEN_COMPLETED,message) else DeviceStateBundle(DeviceState.DEVICE_OPENTAOBANSCREEN_FAILED,message)
+                }
+                Cons.ClickDongYTaoBanActionType ->{
+                    if(actionResponse == ActionResponse.COMPLETED) return DeviceStateBundle(DeviceState.DEVICE_CREATEROOM_COMPLETED,message) else DeviceStateBundle(DeviceState.DEVICE_CREATEROOM_FAILED,message)
+                }
+            }
         }
+
     }
-    return DeviceStats.NOTDETECTED
+    return DeviceStateBundle(DeviceState.NOTDETECTED,message)
 }

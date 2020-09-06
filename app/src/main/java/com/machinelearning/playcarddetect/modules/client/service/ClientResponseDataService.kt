@@ -5,21 +5,21 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Point
 import android.graphics.Rect
-import android.graphics.RectF
 import android.os.Handler
 import android.util.Log
 import android.view.WindowManager
-import android.view.accessibility.AccessibilityEvent
 import com.machinelearning.playcarddetect.common.Cons.STARTSERVICE
+import com.machinelearning.playcarddetect.common.StringUtils
 import com.machinelearning.playcarddetect.common.model.CardBase64
 import com.machinelearning.playcarddetect.common.setNotification
 import com.machinelearning.playcarddetect.modules.datamanager.CaptureManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.TextCollectionManager.CurrentPosition
 import com.machinelearning.playcarddetect.modules.accessibilityaction.BaseActionService
-import com.machinelearning.playcarddetect.modules.accessibilityaction.Cons
+import com.machinelearning.playcarddetect.modules.accessibilityaction.Verify
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.*
-import com.machinelearning.playcarddetect.modules.client.DeviceStats
+import com.machinelearning.playcarddetect.modules.client.DeviceState
+import com.machinelearning.playcarddetect.modules.client.DeviceStateBundle
 import com.machinelearning.playcarddetect.modules.datamanager.TextCollectionManager
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
@@ -35,6 +35,10 @@ class ClientResponseDataService : BaseActionService(),ServerClientDataManager.IC
 
     private var isOpenGameMenuAction: Boolean = false
     private var openGameMenuActionCallback: ((ActionResponse) -> Unit)? = null
+
+
+    private var verify : Verify? =null
+    private var verifyCallBack: ((ActionResponse,String) -> Unit)? = null
     private var mHandler: Handler? = null
     private var captureManager: CaptureManager? = null
 
@@ -77,26 +81,13 @@ class ClientResponseDataService : BaseActionService(),ServerClientDataManager.IC
 //                performAction(mutableListOf(click)){
 //
 //                }
-                ServerClientDataManager.getInstance().ClientPushDeviceStats(DeviceStats.NOTDETECTED){ actionResponse, deviceStats ->
-                    ServerClientDataManager.getInstance().ClientListenerToRemotePath { action ->
-                        Log.d(TAG, "onSuccess: " + action.actionType)
-                        performAction(mutableListOf(action)) { response ->
-                            ServerClientDataManager.getInstance().ClientPushDeviceStats(mappingDeviceStats(action, response),this)
-                        }
-                    }
-                }
+                ServerClientDataManager.getInstance().ClientPushDeviceStats(DeviceStateBundle(DeviceState.NOTDETECTED,""),this)
+
             }
         }
         return super.onStartCommand(intent, flags, startId)
     }
-    override fun onResponse(actionResponse: ActionResponse?, deviceStats: DeviceStats?) {
-//        when(deviceStats){
-//            DeviceStats.NOTDETECTED ->{
-//
-//            }
-//        }
 
-    }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -137,15 +128,45 @@ class ClientResponseDataService : BaseActionService(),ServerClientDataManager.IC
                 }
 
             })
+        }else if(verifyCallBack !=null && verify !=null){
+            var verifyZone = verify!!.verifyZone
+            var verifyBitmap = Bitmap.createBitmap(it!!,verifyZone.left.toInt(),verifyZone.top.toInt(),(verifyZone.right-verifyZone.left).toInt(),(verifyZone.bottom-verifyZone.top).toInt())
+            TextCollectionManager.getInstance().getTextFromBitmap(verifyBitmap, object : TextCollectionManager.IGetTextListener {
+                override fun onGetTextSuccess(text: String?) {
+                    if (text != null) {
+                        var text = StringUtils.removeAccent(text)
+                        var verifyTextArray = verify!!.verifyText.split(",").toTypedArray()
+                        verifyTextArray.forEach {
+                            if (text.contains(it)){
+                                Log.d(TAG, "onGetTextSuccess: "+StringUtils.removeAccent(text)+"/"+ verify!!.verifyText)
+                                verify=null
+                                verifyCallBack?.invoke(ActionResponse.COMPLETED,text)
+                                verifyCallBack = null
+                                return@forEach
+                            }
+                        }
+
+                    }
+                    captureManager?.takeScreenshot()
+                }
+
+                override fun onGetTextFailed(error: String?) {
+                    verify=null
+                    verifyCallBack?.invoke(ActionResponse.FAILED,error+"")
+                    verifyCallBack = null
+                    captureManager?.takeScreenshot()
+                }
+
+            })
         }else{
-            captureManager!!.takeScreenshot()
+            captureManager?.takeScreenshot()
         }
 //            captureManager!!.takeScreenshot()
     }
 
-    override fun performAction(actions: MutableList<Action>, callback: (ActionResponse) -> Unit) {
+    override fun performAction(actions: MutableList<Action>,message : String,callback: (ActionResponse,String) -> Unit) {
             if (actions.isEmpty()) {
-                callback.invoke(ActionResponse.COMPLETED)
+                callback.invoke(ActionResponse.COMPLETED,message)
             } else {
                 val action = actions.first()
                 Observable.timer(action.delayTime, TimeUnit.MILLISECONDS).doOnComplete {
@@ -157,12 +178,27 @@ class ClientResponseDataService : BaseActionService(),ServerClientDataManager.IC
                         dispatchGesture(gestureDescription, object : GestureResultCallback() {
                             override fun onCompleted(gestureDescription: GestureDescription) {
                                 super.onCompleted(gestureDescription)
-                                actions.removeFirst()
-                                performAction(actions, callback)
+                                if (action is ClickActionWithVerify) {
+                                    verify = action.verify
+                                    verifyCallBack = object : (ActionResponse,String) -> Unit{
+                                        override fun invoke(p1: ActionResponse,verifyMessage: String) {
+                                            if (p1 == ActionResponse.COMPLETED) {
+                                                actions.removeFirst()
+                                                performAction(actions,verifyMessage,callback)
+                                            } else {
+                                                callback.invoke(ActionResponse.FAILED,verifyMessage)
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    actions.removeFirst()
+                                    performAction(actions,message, callback)
+                                }
                             }
+
                             override fun onCancelled(gestureDescription: GestureDescription) {
                                 super.onCancelled(gestureDescription)
-                                callback.invoke(ActionResponse.FAILED)
+                                callback.invoke(ActionResponse.FAILED,message)
                             }
                         }, null)
                     }else if(action is OpenAppAction){
@@ -171,24 +207,24 @@ class ClientResponseDataService : BaseActionService(),ServerClientDataManager.IC
                         if(launchIntent!=null){
                             startActivity(launchIntent)
                             actions.removeFirst()
-                            performAction(actions, callback)
+                            performAction(actions, message,callback)
                         }else{
-                            callback.invoke(ActionResponse.FAILED)
+                            callback.invoke(ActionResponse.FAILED,message)
                         }
                     }else if(action is CaptureScreenAction){
                         Log.d(TAG, "performAction: capturescreen")
 //                        startCapture()
                         actions.removeFirst()
-                        performAction(actions, callback)
+                        performAction(actions,message, callback)
                     }else if(action is OpenGameMenuAction){
                         Log.d(TAG, "performAction: opengame")
                         openGameMenuActionCallback = object :(ActionResponse) -> Unit {
                             override fun invoke(p1: ActionResponse) {
                                 if(p1 == ActionResponse.COMPLETED){
                                     actions.removeFirst()
-                                    performAction(actions, callback)
+                                    performAction(actions, message,callback)
                                 }else{
-                                    callback.invoke(ActionResponse.FAILED)
+                                    callback.invoke(ActionResponse.FAILED,message)
                                 }
                             }
 
@@ -197,12 +233,26 @@ class ClientResponseDataService : BaseActionService(),ServerClientDataManager.IC
                     }else {
                         Log.d(TAG, "performAction: empty")
                         actions.removeFirst()
-                        performAction(actions, callback)
+                        performAction(actions, message,callback)
                     }
                 }.observeOn(Schedulers.io()).subscribe()
             }
     }
 
+    override fun onResponse(actionResponse: ActionResponse?, deviceStateBundle: DeviceStateBundle?) {
+        ServerClientDataManager.getInstance().ClientListenerToRemotePath { action ->
+            Log.d(TAG, "onSuccess: " + action.actionType)
+            performAction(mutableListOf(action),""){ actionResponse: ActionResponse, message: String ->
+                ServerClientDataManager.getInstance().ClientPushDeviceStats(mappingDeviceStats(action,actionResponse,message),object : ServerClientDataManager.IClientPushDeviceStatsCallback{
+                    override fun onResponse(actionResponse: ActionResponse?, deviceStateBundle: DeviceStateBundle?) {
+
+                    }
+
+                })
+            }
+
+        }
+    }
 
 
 }

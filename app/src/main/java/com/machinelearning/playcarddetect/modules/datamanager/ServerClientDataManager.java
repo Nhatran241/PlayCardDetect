@@ -21,11 +21,8 @@ import com.machinelearning.playcarddetect.modules.accessibilityaction.Cons;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.Action;
 import com.machinelearning.playcarddetect.common.model.CardBase64;
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ActionResponse;
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.ClickAction;
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.GestureAction;
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.MultipleGestureAction;
-import com.machinelearning.playcarddetect.modules.accessibilityaction.action.SwipeAction;
-import com.machinelearning.playcarddetect.modules.client.DeviceStats;
+import com.machinelearning.playcarddetect.modules.client.DeviceState;
+import com.machinelearning.playcarddetect.modules.client.DeviceStateBundle;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -82,9 +79,9 @@ public class ServerClientDataManager {
         db.collection(devicesPath).addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                Map<String,String> map = new HashMap<>();
+                Map<String,DeviceStateBundle> map = new HashMap<>();
                 for (DocumentSnapshot a:queryDocumentSnapshots.getDocuments()) {
-                    map.put(a.getId(),String.valueOf(a.get(devicesPath_deviceStats)));
+                    map.put(a.getId(),a.toObject(DeviceStateBundle.class));
                 }
                 iAdminListenerToDeviceStatsPath.onDeviceStatsReponse(map,e+"");
             }
@@ -148,18 +145,18 @@ public class ServerClientDataManager {
             }
         });
     }
-    public void ClientPushDeviceStats(DeviceStats deviceStats, IClientPushDeviceStatsCallback iClientPushDeviceStatsCallback){
-        final Map<String, DeviceStats> deviceStatsMap = new HashMap<>();
-        deviceStatsMap.put(devicesPath_deviceStats,deviceStats);
-        db.collection(devicesPath).document(deviceId).set(deviceStatsMap,SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+    public void ClientPushDeviceStats(DeviceStateBundle deviceStateBundle, IClientPushDeviceStatsCallback iClientPushDeviceStatsCallback){
+//        final Map<String, DeviceStateBundle> deviceStatsMap = new HashMap<>();
+//        deviceStatsMap.put(devicesPath_deviceStats, deviceStateBundle);
+        db.collection(devicesPath).document(deviceId).set(deviceStateBundle,SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                iClientPushDeviceStatsCallback.onResponse(ActionResponse.COMPLETED,deviceStats);
+                iClientPushDeviceStatsCallback.onResponse(ActionResponse.COMPLETED, deviceStateBundle);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                iClientPushDeviceStatsCallback.onResponse(ActionResponse.FAILED,deviceStats);
+                iClientPushDeviceStatsCallback.onResponse(ActionResponse.FAILED, deviceStateBundle);
             }
         });
     }
@@ -199,7 +196,7 @@ public class ServerClientDataManager {
         void onDataResponse(String data,@Nullable String message);
     }
     public interface IAdminListenerToDeviceStatsPath{
-        void onDeviceStatsReponse(Map<String,String> data,@Nullable String mesaage);
+        void onDeviceStatsReponse(Map<String,DeviceStateBundle> data,@Nullable String mesaage);
     }
     public interface IAdminPutRemoteCallback{
         void onAdminPutRemoteResponse(ActionResponse actionResponse,String actionType,String deviceId);
@@ -216,7 +213,7 @@ public class ServerClientDataManager {
         void onFailed(String error);
     }
     public interface IClientPushDeviceStatsCallback{
-        void onResponse(ActionResponse actionResponse,DeviceStats deviceStats);
+        void onResponse(ActionResponse actionResponse, DeviceStateBundle deviceStateBundle);
     }
     public interface IClientPushRemoteResponseCallback{
         void onResponse(ActionResponse actionResponse);
