@@ -27,6 +27,7 @@ fun mappingActions(documentSnapshot: DocumentSnapshot,actionType :String):Action
             }
         }
         Cons.OpenAppActionType ->{
+
             val openAppAction = documentSnapshot.toObject(OpenAppAction::class.java)
             if(openAppAction!=null) {
 //                actions.add(openAppAction)

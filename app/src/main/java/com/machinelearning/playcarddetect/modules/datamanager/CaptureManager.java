@@ -66,7 +66,6 @@ public class CaptureManager {
 
     public void requestScreenshotPermission(@NonNull Activity activity, int requestId) {
         if (mIntent == null) {
-            Log.d(TAG, "requestScreenshotPermission");
             MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
             try {
                 if (mediaProjectionManager != null) {
@@ -76,17 +75,14 @@ public class CaptureManager {
             }
 
         } else {
-            Log.d(TAG, "requestScreenshotPermission: aaaaa");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!Settings.canDrawOverlays(activity)) {
-                    Log.d(TAG, "requestScreenshotPermission: false");
                     if (onGrantedPermissionListener != null)
                         onGrantedPermissionListener.onResult(false);
                 } else {
                     if (onGrantedPermissionListener != null)
                         onGrantedPermissionListener.onResult(true);
                 }
-                Log.d(TAG, "requestScreenshotPermission: true");
             } else {
                 if (onGrantedPermissionListener != null)
                     onGrantedPermissionListener.onResult(true);
@@ -96,7 +92,6 @@ public class CaptureManager {
 
 
     public void onActivityResult(int resultCode, Intent data) {
-        Log.d(TAG, "onActivityResult");
         if (resultCode == Activity.RESULT_OK && data != null) {
             mIntent = data;
             if (onGrantedPermissionListener != null) onGrantedPermissionListener.onResult(true);
@@ -128,10 +123,7 @@ public class CaptureManager {
             @SuppressLint("StaticFieldLeak")
             @Override
             public void onImageAvailable(final ImageReader reader) {
-
-                Log.d("nhatnhat", "screen state change -> take screenshot: ");
                     new AsyncTask<Void, Void, Bitmap>() {
-
                         @Override
                         protected Bitmap doInBackground(final Void... params) {
                             Bitmap bitmap = null;
@@ -140,10 +132,8 @@ public class CaptureManager {
                                     ByteBuffer buffer = planes[0].getBuffer();
                                     int pixelStride = planes[0].getPixelStride(), rowStride = planes[0].getRowStride(), rowPadding = rowStride - pixelStride * width;
                                     bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
-                                    Log.d("bitmapchecksize", "doInBackground: "+bitmap.getWidth()+"/"+bitmap.getHeight());
                                     bitmap.copyPixelsFromBuffer(buffer);
                                     Bitmap newbitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
-                                    Log.d("bitmapchecksize", "doInBackground: "+newbitmap.getWidth()+"/"+newbitmap.getHeight());
                                     bitmap.recycle();
                                     Bitmap bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                                     Canvas c = new Canvas(bmpGrayscale);

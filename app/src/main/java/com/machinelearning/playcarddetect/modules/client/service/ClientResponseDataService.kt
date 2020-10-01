@@ -243,12 +243,7 @@ class ClientResponseDataService : BaseActionService(),ServerClientDataManager.IC
         ServerClientDataManager.getInstance().ClientListenerToRemotePath { action ->
             Log.d(TAG, "onSuccess: " + action.actionType)
             performAction(mutableListOf(action),""){ actionResponse: ActionResponse, message: String ->
-                ServerClientDataManager.getInstance().ClientPushDeviceStats(mappingDeviceStats(action,actionResponse,message),object : ServerClientDataManager.IClientPushDeviceStatsCallback{
-                    override fun onResponse(actionResponse: ActionResponse?, deviceStateBundle: DeviceStateBundle?) {
-
-                    }
-
-                })
+                ServerClientDataManager.getInstance().ClientPushDeviceStats(mappingDeviceStats(action,actionResponse,message)) { actionResponse, deviceStateBundle -> }
             }
 
         }

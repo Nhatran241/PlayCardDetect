@@ -13,7 +13,7 @@ import com.machinelearning.playcarddetect.modules.client.DeviceStateBundle
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager.*
 
-class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataPath,IAdminListenerToDeviceStatsPath{
+class AdminActivity:BaseActivity(),IAdminListenerToDataPath,IAdminListenerToDeviceStatsPath{
     lateinit var binding : ActivitiyAdminBinding
     var viewModel = AdminActivityViewModel()
     val serverClientDataManager =  ServerClientDataManager.getInstance()
@@ -37,29 +37,12 @@ class AdminActivity:BaseActivity(),IAdminPutRemoteCallback,IAdminListenerToDataP
         Log.d(TAG, "onDataResponse: $data/$message")
     }
 
-    override fun onDeviceStatsReponse(data: MutableMap<String, DeviceStateBundle>?, mesaage: String?) {
-        Log.d(TAG, "onRoom: $data/$mesaage")
-        if (data != null) {
-            val entry = data.entries.iterator().next()
-            val deviceId = entry.key
-            val deviceStateBundle = entry.value
-            Log.d(TAG, "onDeviceStatsReponse: "+handleClientActionWithDeviceStats(deviceStateBundle.deviceState).toString()+"/"+deviceId)
-            serverClientDataManager.AdminPushRemote(handleClientActionWithDeviceStats(deviceStateBundle.deviceState),deviceId,this)
+    override fun onDeviceStatsReponse(data: MutableMap<String, DeviceStateBundle>, newDataChange: MutableMap<String, DeviceStateBundle>) {
+        newDataChange.keys.forEach {
+            val deviceStateBundle = newDataChange[it]
+            if(deviceStateBundle!=null)
+                serverClientDataManager.AdminPushRemote(createActionForClient(data,it,deviceStateBundle),it) { actionResponse, actionType, deviceId -> Log.d(TAG, "push action to " + deviceId + " status:" + actionResponse?.name); }
         }
-    }
-
-    override fun onAdminPutRemoteResponse(actionResponse: ActionResponse?, actionType: String?, deviceId: String?) {
-//        serverClientDataManager.AdminListenerToRemotePath(deviceId,this)
-//        if(actionResponse!=null && actionType != null) {
-//            if(actionResponse != ActionResponse.WAITING) {
-//                adminPerformSelfAction(handleAdminActionWithResponse(actionType, actionResponse))
-//                serverClientDataManager.AdminPushRemote(handleClientActionWithResponse(actionType, actionResponse), deviceId, this)
-//            }
-//        }
-    }
-
-    private fun adminPerformSelfAction(handleAdminActionWithResponse: Action) {
-
     }
 
 

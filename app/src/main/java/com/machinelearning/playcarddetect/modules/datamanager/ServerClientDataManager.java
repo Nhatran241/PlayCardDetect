@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -79,11 +80,16 @@ public class ServerClientDataManager {
         db.collection(devicesPath).addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                Map<String,DeviceStateBundle> map = new HashMap<>();
+                Map<String,DeviceStateBundle> currentAllData = new HashMap<>();
+                Map<String,DeviceStateBundle> dataChanged = new HashMap<>();
                 for (DocumentSnapshot a:queryDocumentSnapshots.getDocuments()) {
-                    map.put(a.getId(),a.toObject(DeviceStateBundle.class));
+                    Log.d("adminactivitylog", "onEvent: "+a.getId());
+                    currentAllData.put(a.getId(),a.toObject(DeviceStateBundle.class));
                 }
-                iAdminListenerToDeviceStatsPath.onDeviceStatsReponse(map,e+"");
+                for(DocumentChange documentChange : queryDocumentSnapshots.getDocumentChanges()){
+                    dataChanged.put(documentChange.getDocument().getId(),documentChange.getDocument().toObject(DeviceStateBundle.class));
+                }
+                iAdminListenerToDeviceStatsPath.onDeviceStatsReponse(currentAllData,dataChanged);
             }
         });
     }
@@ -106,8 +112,6 @@ public class ServerClientDataManager {
                 });
     }
     public void AdminPushRemote(Action action, String deviceIdListenerAction, IAdminPutRemoteCallback iAdminPutRemoteCallback){
-//        Map<String,Action> map = new HashMap<>();
-        Log.d("admin_push_aciton", "AdminPushRemote: "+action.actionType);
         if(action.actionType.equals(Cons.EmptyActionType))
             return;
         db.collection(remotePath).document(deviceIdListenerAction).set(action).addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -161,13 +165,16 @@ public class ServerClientDataManager {
         });
     }
     public void ClientListenerToRemotePath(IClientListenerToRemotePath iClientListenerToRemotePath){
-        db.collection(remotePath).document(deviceId).addSnapshotListener((documentSnapshot, e) -> {
-            assert documentSnapshot != null;
-            Log.d("clientListenerToRemotePath", "ClientListenerToRemotePath: "+documentSnapshot.get(remotePath_actionResponse)+"/"+ActionResponse.WAITING);
-            if(documentSnapshot.get(remotePath_actionResponse).toString().equals(ActionResponse.WAITING.name())) {
-                Action actions = ServerClientDataManagerExtKt.mappingActions(documentSnapshot, documentSnapshot.get(remotePath_actionType).toString());
-                iClientListenerToRemotePath.onRemote(actions);
+        db.collection(remotePath).document(deviceId).addSnapshotListener((value, error) -> {
+            if(value!= null && value.getData()!=null) {
+                Log.d("nhatnhatdata", "ClientListenerToRemotePath: "+value.get(remotePath_actionResponse));
+                if (value.get(remotePath_actionResponse).toString().equals(ActionResponse.WAITING.name())) {
+                    Log.d("nhatnhatdata", "ClientListenerToRemotePath: WAITING");
+                    Action actions = ServerClientDataManagerExtKt.mappingActions(value, value.get(remotePath_actionType).toString());
+                    iClientListenerToRemotePath.onRemote(actions);
+                }
             }
+
         });
 
     }
@@ -196,7 +203,7 @@ public class ServerClientDataManager {
         void onDataResponse(String data,@Nullable String message);
     }
     public interface IAdminListenerToDeviceStatsPath{
-        void onDeviceStatsReponse(Map<String,DeviceStateBundle> data,@Nullable String mesaage);
+        void onDeviceStatsReponse(Map<String,DeviceStateBundle> allData,Map<String,DeviceStateBundle> newDataChange);
     }
     public interface IAdminPutRemoteCallback{
         void onAdminPutRemoteResponse(ActionResponse actionResponse,String actionType,String deviceId);
