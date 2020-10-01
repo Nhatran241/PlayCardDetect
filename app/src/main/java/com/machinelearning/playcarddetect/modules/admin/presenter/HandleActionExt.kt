@@ -8,33 +8,7 @@ import com.machinelearning.playcarddetect.modules.accessibilityaction.action.*
 import com.machinelearning.playcarddetect.modules.client.DeviceState
 import com.machinelearning.playcarddetect.modules.client.DeviceStateBundle
 
-fun BaseActivity.handleClientActionWithDeviceStats(deviceState : DeviceState):Action{
-    when(deviceState){
-        DeviceState.NOTDETECTED ->{
-            return OpenAppAction(0,Cons.OpenAppActionType,"gsn.game.zingplaynew1")
-        }
-        DeviceState.DEVICE_OPENAPP_COMPLETED ->{
-            return CaptureScreenAction(0,Cons.CaptureScreenActionType)
-        }
-        DeviceState.DEVICE_STARTCAPTURE_COMPLETED ->{
-            return OpenGameMenuAction(0,Cons.OpenGameMenuActionType)
-        }
-        DeviceState.DEVICE_OPENGAMEMENU_COMPLETED ->{
-            return ClickActionWithVerify(RectF(595f,203f,595f,203f),0,100,500,Cons.OpenChonBanActionType,
-            Verify(RectF(70f,8f,211f,41f),"Chon ban"))
-        }
-        DeviceState.DEVICE_OPENCHONBANSCREEN_COMPLETED ->{
-            return ClickActionWithVerify(RectF(336f,26f,336f,26f),0,50,500,Cons.OpenTaoBanActionType,
-                    Verify(RectF(294f,348f,423f,392f),"Dong y"))
-        }
-        DeviceState.DEVICE_OPENTAOBANSCREEN_COMPLETED ->{
-            return ClickActionWithVerify(RectF(358f,372f,358f,372f),0,50,500,Cons.ClickDongYTaoBanActionType,
-                    Verify(RectF(55f,5f,182f,95f),"Cuoc,Ban,Choi,qua,phut,moi,ngay,se,anh,huong,xau,toi,suc,khoe"))
-        }
-    }
-    return Action(0, Cons.EmptyActionType)
-}
-fun BaseActivity.createActionForClient(severData : Map<String,DeviceStateBundle>,commingDeviceID : String, commingDeviceStateBundle: DeviceStateBundle):Action{
+fun BaseActivity.getNextAction(severData : Map<String,DeviceStateBundle>, commingDeviceID : String, commingDeviceStateBundle: DeviceStateBundle):Action{
     /**
      * Những action không cần ràng buộc điều kiện
      */
@@ -74,6 +48,18 @@ fun BaseActivity.createActionForClient(severData : Map<String,DeviceStateBundle>
             return ClickActionWithVerify(RectF(358f,372f,358f,372f),0,50,500,Cons.ClickDongYTaoBanActionType,
                     Verify(RectF(55f,5f,182f,95f),"Cuoc,Ban,Choi,qua,phut,moi,ngay,se,anh,huong,xau,toi,suc,khoe"))
         }
+        /**
+         * Device đã tạo bàn thành công -> yêu cầu Admin chọn ngẫu nhiên 2 device khác để join bàn
+         */
+        DeviceState.DEVICE_CREATEROOM_COMPLETED ->{
+            return ForceClientJoinRoom(0,Cons.JoinRoomActionType,"301")
+        }
+        /**
+         * Join phòng thành công -> đợi chủ phòng bắt đầu game
+         */
+        DeviceState.DEVICE_JOINROOM_COMPLETED ->{
+            return Action(0,Cons.EmptyActionType)
+        }
     }
     /**
      * Những action có ràng buộc điều kiện
@@ -100,4 +86,35 @@ fun BaseActivity.createActionForClient(severData : Map<String,DeviceStateBundle>
     }
     return Action(0,Cons.EmptyActionType)
 }
+fun BaseActivity.getNextClientAction(adminAction: AdminAction,severData: Map<String, DeviceStateBundle>,commingDeviceID: String,commingDeviceStateBundle: DeviceStateBundle):HashMap<String,Action>{
+    var mapAction = hashMapOf<String,Action>()
+    when(adminAction){
+        is ForceClientJoinRoom -> {
+            var numberClientJoinRoomSuccess = 0
+            var listClientReadyToJoin = mutableListOf<String>()
+            severData.keys.forEach {
+                if(severData[it]?.deviceState == DeviceState.DEVICE_JOINROOM_COMPLETED&&
+                        severData[it]?.message==adminAction.roomNumber)
+                    numberClientJoinRoomSuccess++
+                if(severData[it]?.deviceState == DeviceState.DEVICE_OPENGAMEMENU_COMPLETED)
+                    listClientReadyToJoin.add(it)
+            }
+            var numberClientWillJoin =  2-numberClientJoinRoomSuccess
+            if(numberClientWillJoin >0&&listClientReadyToJoin.size >= numberClientWillJoin){
+                while (mapAction.size<numberClientWillJoin) {
+                    mapAction.put(listClientReadyToJoin.first(),JoinRoomAction(0,Cons.JoinRoomActionType,adminAction.roomNumber))
+                    listClientReadyToJoin.removeFirst()
+                }
+                return mapAction
+            }else{
+                /**
+                 * Không đủ client để join nên hủy room
+                 */
+                mapAction.put(commingDeviceID,DestroyRoomAction(0,Cons.DestroyRoomActionType))
+                return mapAction
+            }
 
+        }
+    }
+    return mapAction
+}

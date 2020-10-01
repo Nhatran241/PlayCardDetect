@@ -12,5 +12,7 @@ public class Cons {
     public static String OpenTaoBanActionType = "ClickTaoban";
     public static String ClickDongYTaoBanActionType = "ClickDongYTaoBan";
     public static String CaptureScreenActionType ="CaptureScreen";
+    public static String JoinRoomActionType  = "JoinRoom";
+    public static String DestroyRoomActionType = "DestroyRoom";
     public static String EmptyActionType ="Empty";
 }

@@ -8,7 +8,6 @@ import com.machinelearning.playcarddetect.common.BaseActivity
 import com.machinelearning.playcarddetect.databinding.ActivitiyAdminBinding
 import com.machinelearning.playcarddetect.modules.accessibilityaction.action.*
 import com.machinelearning.playcarddetect.modules.admin.business.AdminActivityViewModel
-import com.machinelearning.playcarddetect.modules.client.DeviceState
 import com.machinelearning.playcarddetect.modules.client.DeviceStateBundle
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager
 import com.machinelearning.playcarddetect.modules.datamanager.ServerClientDataManager.*
@@ -40,8 +39,17 @@ class AdminActivity:BaseActivity(),IAdminListenerToDataPath,IAdminListenerToDevi
     override fun onDeviceStatsReponse(data: MutableMap<String, DeviceStateBundle>, newDataChange: MutableMap<String, DeviceStateBundle>) {
         newDataChange.keys.forEach {
             val deviceStateBundle = newDataChange[it]
-            if(deviceStateBundle!=null)
-                serverClientDataManager.AdminPushRemote(createActionForClient(data,it,deviceStateBundle),it) { actionResponse, actionType, deviceId -> Log.d(TAG, "push action to " + deviceId + " status:" + actionResponse?.name); }
+            if(deviceStateBundle!=null){
+                var action = getNextAction(data,it,deviceStateBundle);
+                if(action is AdminAction){
+                    var listAction  = getNextClientAction(action,data,newDataChange)
+                    listAction.keys.forEach {
+                        serverClientDataManager.AdminPushRemote(listAction.get(it),it) { actionResponse, actionType, deviceId -> }
+                    }
+                }else{
+                    serverClientDataManager.AdminPushRemote(action,it) { actionResponse, actionType, deviceId -> Log.d(TAG, "push action to " + deviceId + " status:" + actionResponse?.name); }
+                }
+            }
         }
     }
 
